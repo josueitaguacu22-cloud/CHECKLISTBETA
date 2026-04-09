@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist Tratos - V111 (Finalíssima) 🏆</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #1e1e2f; 
+            background-position: center; 
+            background-size: cover; 
+            background-attachment: fixed; 
+            color: #fff; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            transition: background 1s ease; 
+        }
+        .backdrop-fundo { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(15, 15, 25, 0.85); 
+            z-index: -1; 
+        }
+        .container { 
+            background: rgba(42, 42, 64, 0.85); 
+            padding: 25px; 
+            border-radius: 15px; 
+            width: 100%; 
+            max-width: 600px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6); 
+            backdrop-filter: blur(8px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            z-index: 1;
+        }
+        h2 { 
+            border-bottom: 2px solid #00ffcc; 
+            padding-bottom: 10px; 
+            color: #00ffcc; 
+            text-align: center; 
+            text-transform: uppercase; 
+            margin-top: 0; 
+        }
+        input[type="file"] { 
+            display: block; 
+            margin: 20px 0; 
+            background: rgba(58, 58, 80, 0.8); 
+            padding: 15px; 
+            border-radius: 8px; 
+            width: 94%; 
+            border: 1px dashed #00ffcc; 
+            color: #fff; 
+            cursor: pointer;
+        }
+        .btn-gerar { 
+            background: linear-gradient(135deg, #4CAF50, #2E7D32); 
+            width: 100%; 
+            font-size: 18px; 
+            margin-bottom: 15px; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); 
+        }
+        .botoes-acao { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        .botoes-acao button { 
+            flex: 1; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 6px; 
+            color: white; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        .btn-wpp { background-color: #25D366; }
+        .btn-teams { background-color: #6264A7; }
+
+        #blocoDicionario { display: none; width: 100%; margin-bottom: 20px; }
+        .galeria-titulo { font-size: 14px; color: #ff9800; text-align: center; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #4a4a6a; padding-bottom: 5px; }
+        .categorias-container { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
+        .btn-cat { flex: 1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #btnCatTratos { background: linear-gradient(135deg, #ff9800, #e65100); }
+        #btnCatCtt { background: linear-gradient(135deg, #2196F3, #1565C0); }
+        
+        .galeria-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid #4a4a6a; }
+        .btn-dic { background: rgba(255, 255, 255, 0.1); border: 1px solid #00ffcc; color: #00ffcc; padding: 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.3s; text-align: center; }
+        .btn-dic:hover { background: rgba(0, 255, 204, 0.2); transform: translateY(-2px); }
+
+        #resultado { 
+            background-color: rgba(20, 20, 30, 0.9); 
+            padding: 20px; 
+            border-radius: 8px; 
+            white-space: pre-wrap; 
+            font-family: 'Consolas', monospace; 
+            font-size: 14px; 
+            border: 1px solid #4a4a6a; 
+            min-height: 100px; 
+        }
+
+        #modalViewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; }
+        #viewerTitle { color: #00ffcc; font-size: 24px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; text-align: center; padding: 0 10px; }
+        #imgDisplay { max-width: 90%; max-height: 45vh; border: 2px solid #00ffcc; border-radius: 10px; box-shadow: 0 0 20px rgba(0,255,204,0.3); display: none; }
+        #viewerDesc { background: rgba(255, 152, 0, 0.1); color: #fff; padding: 25px; border-radius: 10px; border: 1px dashed #ff9800; margin-top: 15px; max-width: 85%; text-align: center; line-height: 1.6; font-size: 16px; display: none; }
+        .botoes-modal-viewer { display: flex; gap: 15px; margin-top: 25px; }
+        .botoes-modal-viewer button { padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="backdrop-fundo"></div>
+
+<div class="container">
+    <h2>Checklist Tratos</h2>
+    
+    <div id="blocoDicionario">
+        <div class="galeria-titulo">📖 Dicionário de Operações</div>
+        <div class="categorias-container">
+            <button id="btnCatTratos" class="btn-cat" onclick="renderizarGaleria('tratos')">🚜 TRATOS</button>
+            <button id="btnCatCtt" class="btn-cat" onclick="renderizarGaleria('ctt')">🚛 CTT</button>
+        </div>
+        <div class="galeria-grid" id="gridDicionario"></div>
+    </div>
+
+    <input type="file" id="fileUpload" accept=".xlsx, .xls, .xlsm" />
+    <button class="btn-gerar" onclick="processarPlanilha()">GERAR CHECKLIST</button>
+    
+    <div class="botoes-acao">
+        <button class="btn-wpp" onclick="copiarWhatsApp()">Copiar WhatsApp</button>
+        <button class="btn-teams" onclick="copiarTeams()">Copiar Teams</button>
+    </div>
+
+    <div id="resultado">Aguardando importação da planilha...</div>
+</div>
+
+<div id="modalViewer">
+    <h3 id="viewerTitle"></h3>
+    <img id="imgDisplay" src="" />
+    <div id="viewerDesc"></div>
+    <div class="botoes-modal-viewer">
+        <button id="btnInfo" style="background:#2196F3; color:white;" onclick="toggleInfo()">💡 Mais Informações</button>
+        <button style="background:#ff4444; color:white;" onclick="fecharFoto()">❌ Fechar</button>
+    </div>
+</div>
+
+<script>
+    const dictInfo = {
+        "TRATOS": { titulo: "Tratos Culturais", desc: "Conjunto de práticas e cuidados agrícolas." },
+        "VINHACA_LOC": { titulo: "Vinhaça Localizada", desc: "Aplicação direcionada de vinhaça." },
+        "LOMBO": { titulo: "Q/Lombo", desc: "Operação de nivelamento do solo." },
+        "MINERAL": { titulo: "Cultivo Mineral", desc: "Aplicação de fertilizantes sintéticos/minerais." },
+        "SOQUEIRA": { titulo: "Corte Soqueira", desc: "Operação que corta o solo e as raízes da cana." },
+        "COMPOSTO": { titulo: "Composto", desc: "Aplicação de adubo orgânico." },
+        "UNIPORT": { titulo: "Herbicida Uniport", desc: "Pulverizador Autopropelido Uniport." },
+        "HERBPLUS": { titulo: "Herbicida Herbplus", desc: "Implemento tratorizado Herbplus." },
+        "CORRETIVO": { titulo: "Corretivo", desc: "Insumos para corrigir a acidez do solo." },
+        "CANAL": { titulo: "Vinhaça Canal", desc: "Sistema de canais para conduzir a vinhaça." },
+        "BOMBA": { titulo: "Moto Bomba", desc: "Equipamento de bombeamento." },
+        "ROLL": { titulo: "Hidro Roll", desc: "Carretel enrolador móvel." },
+        "CTT": { titulo: "Módulo CTT", desc: "Corte, Transbordo e Transporte." },
+        "COLHEDORA": { titulo: "Colhedora", desc: "Máquina responsável pela etapa do corte." },
+        "TRANSBORDO": { titulo: "Transbordo", desc: "Trator tracionando caixas basculantes." },
+        "TRANSPORTE": { titulo: "Transporte de Cana", desc: "Caminhões pesados de frete." }
+    };
+
+    const categoriasMenu = {
+        tratos: ["TRATOS", "VINHACA_LOC", "LOMBO", "MINERAL", "SOQUEIRA", "COMPOSTO", "UNIPORT", "HERBPLUS", "CORRETIVO", "CANAL", "BOMBA", "ROLL"],
+        ctt: ["CTT", "COLHEDORA", "TRANSBORDO", "TRANSPORTE"]
+    };
+
+    let fotos = {}; 
+    let categoriaAberta = null;
+
+    function renderizarGaleria(cat) {
+        const grid = document.getElementById('gridDicionario');
+        if (categoriaAberta === cat) {
+            grid.style.display = 'none';
+            categoriaAberta = null;
+            return;
+        }
+        categoriaAberta = cat;
+        grid.innerHTML = '';
+        grid.style.display = 'grid'; 
+        categoriasMenu[cat].forEach(key => {
+            if (dictInfo[key]) {
+                let btn = document.createElement('button');
+                btn.className = 'btn-dic';
+                btn.innerText = dictInfo[key].titulo;
+                btn.onclick = () => abrirFotoInfo(key);
+                grid.appendChild(btn);
+            }
+        });
+    }
+
+    function abrirFotoInfo(key) {
+        const data = dictInfo[key];
+        document.getElementById('viewerTitle').innerText = data.titulo;
+        document.getElementById('viewerDesc').innerText = data.desc;
+        const imgEl = document.getElementById('imgDisplay');
+        const descEl = document.getElementById('viewerDesc');
+        const btnInfo = document.getElementById('btnInfo');
+
+        if (key === 'TRATOS' || key === 'CTT') {
+            descEl.style.display = 'block'; 
+            imgEl.style.display = 'none'; 
+            btnInfo.style.display = 'none';
+        } else {
+            descEl.style.display = 'none'; 
+            btnInfo.style.display = 'block';
+            if (fotos[key]) { 
+                imgEl.src = fotos[key]; 
+                imgEl.style.display = 'block'; 
+            } else { 
+                imgEl.style.display = 'none'; 
+            }
+        }
+        document.getElementById('modalViewer').style.display = 'flex';
+    }
+
+    function fecharFoto() { 
+        document.getElementById('modalViewer').style.display = 'none'; 
+    }
+    
+    function toggleInfo() {
+        const desc = document.getElementById('viewerDesc');
+        if (desc.style.display === 'none') {
+            desc.style.display = 'block';
+        } else {
+            desc.style.display = 'none';
+        }
+    }
+
+    async function askHerbicidaType(machineId) {
+        return new Promise((resolve) => {
+            const div = document.createElement('div');
+            div.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:10000;";
+            div.innerHTML = `
+                <div style="background:#2a2a40;padding:30px;border-radius:10px;width:90%;max-width:450px;text-align:center;border:2px solid #00ffcc;">
+                    <p style="margin-bottom:10px;font-weight:bold;color:#00ffcc;font-size:18px;">SELECIONE O TIPO</p>
+                    <p style="margin-bottom:20px;font-size:20px;color:#fff;">Máquina Ativa: <b>${machineId}</b></p>
+                    <div style="display:flex;gap:15px;margin-bottom:20px;">
+                        <button id="btnUni" style="background:linear-gradient(135deg, #2196F3, #1565C0);flex:1;padding:20px;color:white;font-weight:bold;border:none;border-radius:8px;font-size:16px;cursor:pointer;">🚜 UNIPORT</button>
+                        <button id="btnHerb" style="background:linear-gradient(135deg, #ff9800, #e65100);flex:1;padding:20px;color:white;font-weight:bold;border:none;border-radius:8px;font-size:16px;cursor:pointer;">⚙️ HERBPLUS</button>
+                    </div>
+                    <input type="text" id="manualInp" placeholder="Ou digite outro manualmente..." style="width:90%;padding:12px;margin-bottom:15px;border-radius:5px;background:#1e1e2f;color:#fff;border:1px solid #4a4a6a;">
+                    <button id="btnManual" style="background:#4CAF50;color:#fff;padding:12px;width:100%;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Confirmar Manual</button>
+                </div>
+            `;
+            document.body.appendChild(div);
+            
+            const close = (res) => { 
+                document.body.removeChild(div); 
+                resolve(res); 
+            };
+            
+            document.getElementById('btnUni').onclick = () => close("UNIPORT");
+            document.getElementById('btnHerb').onclick = () => close("HERBPLUS");
+            document.getElementById('btnManual').onclick = () => close(document.getElementById('manualInp').value.trim());
+        });
+    }
+
+    async function askDynamicForm(tipo) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:9999;";
+            const isMudanca = tipo === 'mudancas';
+            const title = isMudanca ? "MUDANÇAS DE FRENTE" : "CHAMADOS TECNOLOGIA";
+
+            overlay.innerHTML = `
+                <div style="background:#2a2a40;padding:25px;border-radius:10px;width:95%;max-width:500px;max-height:85vh;overflow-y:auto;border:1px solid #ff9800;text-align:center;">
+                    <h3 style="color:#ff9800;margin-top:0;">${title}</h3>
+                    <div id="dynamicList"></div>
+                    <button id="btnAdd" style="background:rgba(33, 150, 243, 0.2);border:1px dashed #2196F3;color:#2196F3;padding:12px;margin:10px 0;width:100%;border-radius:5px;cursor:pointer;font-weight:bold;">➕ ADICIONAR OUTRO</button>
+                    <button id="btnSave" style="background:#4CAF50;color:#fff;padding:15px;width:100%;border-radius:5px;border:none;cursor:pointer;font-weight:bold;margin-bottom:10px;">💾 CONFIRMAR TODOS</button>
+                    <button id="btnSkip" style="background:#ff4444;color:#fff;padding:12px;width:100%;border-radius:5px;border:none;cursor:pointer;font-weight:bold;">NENHUM (Pular)</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const list = document.getElementById('dynamicList');
+            let count = 0;
+
+            function addRow() {
+                count++;
+                const row = document.createElement('div');
+                row.style = "background:#1e1e2f;padding:20px 15px 15px 15px;border-radius:8px;margin-bottom:15px;border:1px solid #4a4a6a;position:relative;text-align:left;";
+                
+                let inps = "";
+                if (isMudanca) {
+                    inps = `
+                        <input type="text" class="inp-1" placeholder="Quem Solicitou?" style="width:94%;margin:5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                        <input type="text" class="inp-2" placeholder="Qual a Frota?" style="width:94%;margin:5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                        <input type="text" class="inp-3" placeholder="Frente Destino?" style="width:94%;margin:5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                    `;
+                } else {
+                    inps = `
+                        <input type="text" class="inp-1" placeholder="Qual a Frota?" style="width:94%;margin:5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                        <input type="date" class="inp-2" style="width:94%;margin:5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                        <input type="time" class="inp-3" style="width:94%;margin:5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                    `;
+                }
+
+                row.innerHTML = `<span style="position:absolute;top:-10px;left:15px;background:#ff9800;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;">Registro ${count}</span>${inps}`;
+                list.appendChild(row);
+            }
+            
+            addRow();
+
+            document.getElementById('btnAdd').onclick = addRow;
+            
+            document.getElementById('btnSkip').onclick = () => { 
+                document.body.removeChild(overlay); 
+                resolve([]); 
+            };
+            
+            document.getElementById('btnSave').onclick = () => {
+                const results = [];
+                for (let r of list.children) {
+                    let v1 = r.querySelector('.inp-1').value.trim();
+                    let v2 = r.querySelector('.inp-2').value.trim();
+                    let v3 = r.querySelector('.inp-3').value.trim();
+                    
+                    if (v1 || v2 || v3) {
+                        if (isMudanca) {
+                            results.push(`${v1 || "N/A"} - ${v2 || "N/A"} - ${(v3 || "N/A").toUpperCase()}`);
+                        } else {
+                            let dt = v2 ? v2.split('-').reverse().join('/') : "N/A";
+                            let hr = v3 || "00:00";
+                            results.push(`${v1 || "N/A"} - ${dt} ${hr}`);
+                        }
+                    }
+                }
+                document.body.removeChild(overlay);
+                resolve(results);
+            };
+        });
+    }
+
+    async function askObsForm() {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:9999;";
+
+            overlay.innerHTML = `
+                <div style="background:#2a2a40;padding:25px;border-radius:10px;width:95%;max-width:500px;border:1px solid #ff9800;text-align:center;">
+                    <h3 style="color:#ff9800;margin-top:0;">HÁ OBSERVAÇÕES?</h3>
+                    <textarea id="obsText" rows="4" placeholder="Digite as observações aqui..." style="width:94%;margin:10px 0;padding:10px;border-radius:5px;background:#1e1e2f;color:#fff;border:1px solid #4a4a6a;resize:vertical;font-family:inherit;"></textarea>
+                    <button id="btnSaveObs" style="background:#4CAF50;color:#fff;padding:15px;width:100%;border-radius:5px;border:none;cursor:pointer;font-weight:bold;margin-bottom:10px;">💾 CONFIRMAR</button>
+                    <button id="btnSkipObs" style="background:#ff4444;color:#fff;padding:12px;width:100%;border-radius:5px;border:none;cursor:pointer;font-weight:bold;">NENHUMA (Pular)</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            document.getElementById('btnSkipObs').onclick = () => { 
+                document.body.removeChild(overlay); 
+                resolve(""); 
+            };
+            
+            document.getElementById('btnSaveObs').onclick = () => {
+                const val = document.getElementById('obsText').value.trim();
+                document.body.removeChild(overlay);
+                resolve(val);
+            };
+        });
+    }
+
+    const normalizeStr = (str) => {
+        return str.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+    };
+
+    async function extrairFotosConfig(file) {
+        try {
+            const zip = await JSZip.loadAsync(file);
+            const wbXml = await zip.file("xl/workbook.xml").async("text");
+            const sMatch = wbXml.match(/<sheet [^>]*name="CONFIG"[^>]*sheetId="(\d+)"[^>]*r:id="(rId\d+)"/i);
+            
+            if (!sMatch) return;
+            
+            const wbRels = await zip.file("xl/_rels/workbook.xml.rels").async("text");
+            const relTarget = wbRels.match(new RegExp(`Id="${sMatch[2]}"[^>]*Target="([^"]+)"`))[1];
+            
+            const sRelsPath = "xl/" + relTarget.replace("worksheets/", "worksheets/_rels/") + ".rels";
+            const sRelsXml = await zip.file(sRelsPath).async("text");
+            
+            const dMatch = sRelsXml.match(/Target="..\/drawings\/([^"]+)"/);
+            if (!dMatch) return;
+            
+            const dPath = "xl/drawings/" + dMatch[1];
+            const dRelsPath = "xl/drawings/_rels/" + dMatch[1] + ".rels";
+            
+            const dXml = await zip.file(dPath).async("text");
+            const dRelsXml = await zip.file(dRelsPath).async("text");
+            
+            const xmlDoc = new DOMParser().parseFromString(dXml, "text/xml");
+            const pics = xmlDoc.getElementsByTagName("xdr:pic");
+            
+            for (let pic of pics) {
+                const nameNode = pic.getElementsByTagName("xdr:cNvPr")[0];
+                if (!nameNode) continue;
+                
+                const rawName = nameNode.getAttribute("name");
+                const normName = normalizeStr(rawName);
+                const rId = pic.getElementsByTagName("a:blip")[0].getAttribute("r:embed");
+                
+                const imgPath = dRelsXml.match(new RegExp(`Id="${rId}"[^>]*Target="..\/media\/([^"]+)"`))[1];
+                const url = URL.createObjectURL(await zip.file("xl/media/" + imgPath).async("blob"));
+                
+                for (let key in dictInfo) {
+                    if (normName.includes(normalizeStr(dictInfo[key].titulo)) || normName.includes(key)) {
+                        fotos[key] = url;
+                    }
+                }
+            }
+        } catch (e) { 
+            console.log("Imagens ignoradas."); 
+        }
+    }
+
+    function parseSafeDate(val) {
+        if (val === undefined || val === null || val === "") return null;
+        let obj = null;
+        let str = "";
+
+        if (typeof val === 'number') {
+            if (val > 1 && (val < 44900 || val > 48000)) return null; 
+            
+            let baseDate = new Date();
+            if (val >= 44900 && val <= 48000) {
+                let utc_days  = Math.floor(val - 25569);
+                let date_info = new Date(utc_days * 86400 * 1000);
+                baseDate = new Date(date_info.getUTCFullYear(), date_info.getUTCMonth(), date_info.getUTCDate());
+            }
+            
+            let fraction = val - Math.floor(val);
+            if (fraction > 0.00001) {
+                let total_seconds = Math.round(fraction * 86400);
+                baseDate.setHours(Math.floor(total_seconds / 3600), Math.floor((total_seconds % 3600) / 60), 0, 0);
+            } else if (val >= 44900) {
+                baseDate.setHours(0, 0, 0, 0);
+            }
+            obj = baseDate;
+            
+        } else {
+            let s = String(val).replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+            if (s.split('.').length > 2) return null; 
+            
+            let dateMatch = s.match(/(?:^|\s)(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+            let timeMatch = s.match(/(?:^|\s)(\d{1,2})[:hH](\d{2})/);
+
+            if (!dateMatch && !timeMatch) return null;
+            
+            let now = new Date();
+            let yr = now.getFullYear();
+            let mo = now.getMonth();
+            let dy = now.getDate();
+            let hr = 0;
+            let mi = 0;
+            
+            if (dateMatch) {
+                dy = parseInt(dateMatch[1], 10);
+                mo = parseInt(dateMatch[2], 10) - 1;
+                yr = parseInt(dateMatch[3], 10);
+                if (yr < 100) yr += 2000;
+                if (yr < 2023 || yr > 2030) return null; 
+            }
+            
+            if (timeMatch) {
+                hr = parseInt(timeMatch[1], 10);
+                mi = parseInt(timeMatch[2], 10);
+            }
+
+            if (dateMatch && timeMatch) {
+                obj = new Date(yr, mo, dy, hr, mi);
+            } else if (dateMatch) {
+                obj = new Date(yr, mo, dy, 0, 0, 0, 0);
+            } else if (timeMatch) {
+                obj = new Date();
+                obj.setHours(hr, mi, 0, 0);
+            }
+        }
+
+        if (obj) {
+            let d = obj.getDate().toString().padStart(2, '0');
+            let m = (obj.getMonth() + 1).toString().padStart(2, '0');
+            let y = obj.getFullYear().toString().slice(-2);
+            let h = obj.getHours().toString().padStart(2, '0');
+            let min = obj.getMinutes().toString().padStart(2, '0');
+            
+            if (val > 1 || String(val).includes('/')) {
+                str = d + '/' + m + '/' + y + ' ' + h + ':' + min;
+            } else {
+                str = h + ':' + min;
+            }
+            
+            return { obj: obj, str: str };
+        }
+        return null;
+    }
+
+    function processarPlanilha() {
+        const fileUpload = document.getElementById('fileUpload');
+        if (!fileUpload.files[0]) return alert("Selecione a planilha!");
+        
+        const file = fileUpload.files[0];
+        const reader = new FileReader();
+        document.getElementById('resultado').innerText = "Processando... 🚀";
+
+        reader.onload = async (e) => {
+            await extrairFotosConfig(file);
+            
+            if (fotos["UNIPORT"]) {
+                document.body.style.backgroundImage = "url('" + fotos["UNIPORT"] + "')";
+            }
+
+            setTimeout(async () => {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array', cellFormula: false, cellHTML: false});
+                    document.getElementById('blocoDicionario').style.display = 'block';
+
+                    let fData = {};
+                    let cMap = {};
+                    
+                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "OFICINA", "OFC", "TRANSP"];
+                    const now = new Date();
+
+                    let pMap = {};
+                    for (let sn of workbook.SheetNames) {
+                        let nameUpper = sn.toUpperCase();
+                        if (nameUpper.includes("PARADA") || nameUpper.includes("QUADRO") || nameUpper.includes("STATUS") || nameUpper.includes("MECANICA") || nameUpper.includes("MANUT") || nameUpper.includes("OFICINA")) {
+                            let pRows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], {header: 1});
+                            for (let r = 0; r < pRows.length; r++) {
+                                let rw = pRows[r];
+                                if (!rw || rw.length === 0) continue;
+
+                                let frota = null;
+                                let frotaCol = -1;
+
+                                for (let c = 0; c < rw.length; c++) {
+                                    let m = String(rw[c]||"").trim().match(/\b(\d{4,6})\b/);
+                                    if (m) { 
+                                        frota = m[1]; 
+                                        frotaCol = c; 
+                                        break; 
+                                    }
+                                }
+
+                                if (frota) {
+                                    let dStr = null;
+                                    for (let c = frotaCol + 1; c < rw.length; c++) {
+                                        let p = parseSafeDate(rw[c]);
+                                        if (p) {
+                                            dStr = p.str;
+                                            if (p.str.includes('/')) break;
+                                        }
+                                    }
+                                    if (dStr) {
+                                        pMap[frota] = dStr;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    for (let sn of workbook.SheetNames) {
+                        let snUp = sn.toUpperCase();
+                        if (!snUp.includes("EQUIPAMENTO") && !snUp.includes("SÃO JOSÉ") && !snUp.includes("TRATOS") && !snUp.includes("MANDU") && !snUp.includes("ANDRADE") && !snUp.includes("CRZ") && !snUp.includes("TANABI")) continue;
+                        
+                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], {header: 1});
+                        
+                        let textScan = sn.toUpperCase() + " ";
+                        for (let i = 0; i < 15; i++) if (rows[i]) textScan += rows[i].join(" ").toUpperCase() + " ";
+                        
+                        let unit = "VER";
+                        if (textScan.includes("MANDU")) unit = "MAN";
+                        else if (textScan.includes("SÃO JOSÉ") || textScan.includes("UISJ")) unit = "SJO";
+                        else if (textScan.includes("ANDRADE")) unit = "AND";
+                        else if (textScan.includes("CRUZ ALTA") || textScan.includes("CRZ")) unit = "CRZ";
+                        else if (textScan.includes("TANABI")) unit = "TAN";
+
+                        for (let r = 0; r < rows.length; r++) {
+                            if (!rows[r]) continue;
+                            
+                            for (let c = 0; c < rows[r].length; c++) {
+                                let cell = String(rows[r][c]).toUpperCase().trim();
+                                
+                                if (keywords.some(k => cell.includes(k))) {
+                                    let isOfc = cell.includes("OFICINA") || cell.includes("OFC");
+                                    let b = "N/A";
+                                    let os = "N/A";
+                                    
+                                    let startR = -1;
+                                    for (let s = r + 1; s < r + 8; s++) {
+                                        let hCell = String(rows[s] ? rows[s][c] || "" : "").toUpperCase().trim();
+                                        if (hCell.includes("EQUIP") || hCell.includes("FROTA")) { 
+                                            startR = s + 1; 
+                                            break; 
+                                        }
+                                    }
+                                    
+                                    if (startR === -1) continue; 
+
+                                    for (let scanRow = r + 1; scanRow <= r + 2; scanRow++) {
+                                        if (!rows[scanRow]) continue;
+                                        
+                                        for (let scanCol = c; scanCol <= c + 5; scanCol++) {
+                                            let cellText = String(rows[scanRow][scanCol] || "").toUpperCase().trim();
+                                            if (cellText === "") continue;
+
+                                            if (cellText.includes("BLOCO") && b === "N/A") {
+                                                let mB = cellText.match(/BLOCO\s*[:\-]?\s*([A-Z0-9]+)/);
+                                                if (mB && mB[1] && mB[1] !== "BLOCO") {
+                                                    b = mB[1].trim();
+                                                } else {
+                                                    for (let n = 1; n <= 3; n++) {
+                                                        let nextVal = String(rows[scanRow][scanCol + n] || "").trim();
+                                                        if (nextVal !== "") { b = nextVal; break; }
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if ((cellText === "O.S." || cellText === "O.S" || cellText === "OS" || cellText.startsWith("O.S") || cellText.startsWith("OS")) && os === "N/A") {
+                                                let mO = cellText.match(/O\.?S\.?\s*[:\-]?\s*([A-Z0-9\/\s]+)/);
+                                                if (mO && mO[1] && mO[1].trim() !== "OS" && mO[1].trim() !== "O.S.") {
+                                                    os = mO[1].trim();
+                                                } else {
+                                                    for (let n = 1; n <= 3; n++) {
+                                                        let nextVal = String(rows[scanRow][scanCol + n] || "").trim();
+                                                        if (nextVal !== "") { os = nextVal; break; }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    let numFrente = "1"; 
+                                    if (cell.includes("HERBICIDA")) {
+                                        let txtFrente = (String(rows[r][c] || "") + " " + String(rows[r][c+1] || "")).toUpperCase();
+                                        let m = txtFrente.match(/HERBICIDA\s*[\-\:]?\s*(\d+)/);
+                                        if (m && m[1]) numFrente = m[1];
+                                    }
+
+                                    let nameRaw = cell.includes("HERBICIDA") ? "HERBICIDA - " + numFrente : 
+                                                  cell.includes("CULTIVO MINERAL") ? "CULTIVO MINERAL" : 
+                                                  (cell.includes("CULTIVO") || cell.includes("QUEBRA LOMBO")) ? "CULTIVO / Q LOMBO" : 
+                                                  cell.includes("COMPOSTO") ? cell : 
+                                                  cell.includes("TRANSP") ? "TRANSP DE VINHAÇA" : cell;
+                                                  
+                                    let name = unit + " - " + nameRaw;
+                                    
+                                    if (!fData[name] && !isOfc) {
+                                        fData[name] = { name: name, nameRaw: nameRaw, blocks: [] };
+                                    }
+                                    
+                                    let curBlk = { b: b, os: os, acts: [], stps: [] };
+
+                                    for (let dr = startR; dr < startR + 60; dr++) {
+                                        if (!rows[dr]) continue;
+                                        
+                                        let frota = null;
+                                        let baseC = c;
+                                        
+                                        for (let k = 0; k <= 2; k++) {
+                                            let cellText = String(rows[dr][c+k] || "").trim();
+                                            let mMatch = cellText.match(/\b(\d{4,6})\b/);
+                                            if (mMatch) { 
+                                                frota = mMatch[1]; 
+                                                baseC = c+k; 
+                                                break; 
+                                            }
+                                        }
+
+                                        if (!frota) { 
+                                            if (dr > startR + 10) break; 
+                                            continue; 
+                                        }
+
+                                        if (isOfc) { 
+                                            continue; 
+                                        }
+                                        
+                                        let infoParada = pMap[frota] ? " - " + pMap[frota] : "";
+                                        
+                                        if (!infoParada) {
+                                            let fallbackDStr = null;
+                                            for(let j = baseC + 3; j <= baseC + 10 && j < rows[dr].length; j++) {
+                                                let parsed = parseSafeDate(rows[dr][j]); 
+                                                if (parsed) {
+                                                    fallbackDStr = parsed.str;
+                                                    if (parsed.str.includes('/')) break;
+                                                }
+                                            }
+                                            if (fallbackDStr) infoParada = " - " + fallbackDStr;
+                                        }
+                                        
+                                        let mImpl = String(rows[dr][baseC+1] || frota).match(/^\d+/);
+                                        let impl = mImpl ? mImpl[0] : frota;
+                                        let st = String(rows[dr][baseC+2] || "").toUpperCase().trim();
+                                        
+                                        let uComVal = rows[dr][baseC+3];
+                                        let isOffline = false;
+                                        let lastConnText = "";
+
+                                        let parsed = parseSafeDate(uComVal);
+                                        
+                                        if (parsed && parsed.obj) {
+                                            let diffHrs = (now - parsed.obj) / 3600000;
+                                            if (diffHrs < -12) diffHrs += 24; 
+                                            
+                                            if (diffHrs >= 4) {
+                                                isOffline = true;
+                                                lastConnText = parsed.str;
+                                            }
+                                        }
+
+                                        if (isOffline) {
+                                            cMap[frota] = frota + " " + unit + " - " + nameRaw + " - " + lastConnText;
+                                        }
+
+                                        let isTransp = nameRaw.includes("TRANSP"); 
+                                        let textoImplemento = (isTransp || impl === frota) ? "" : " - " + impl;
+
+                                        let isMudanca = st.includes("MUDANÇA") || st.includes("MUDANCA");
+
+                                        if (isMudanca) {
+                                            curBlk.acts.push("🟡" + frota + textoImplemento + " - " + st.replace("VENTO FORTE","EXCESSO DE VENTO"));
+                                        } else if (["ATIVO","TRABALHANDO","OK","PROPRIO",""].includes(st) && !st.includes("OFF") && !st.includes("DESATUALIZADO") && !st.includes(">4H") && !st.includes("+4H")) {
+                                            curBlk.acts.push("✅" + frota + textoImplemento);
+                                        } else {
+                                            curBlk.stps.push(frota + textoImplemento + " - " + st.replace("VENTO FORTE","EXCESSO DE VENTO") + infoParada);
+                                        }
+                                    }
+                                    
+                                    if (!isOfc && (curBlk.acts.length || curBlk.stps.length)) {
+                                        fData[name].blocks.push(curBlk);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    const order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA"];
+                    let sorted = Object.values(fData).sort((a,b) => {
+                        let iA = order.findIndex(p => a.name.includes(p));
+                        let iB = order.findIndex(p => b.name.includes(p));
+                        if (iA !== iB) return (iA === -1 ? 99 : iA) - (iB === -1 ? 99 : iB);
+                        return a.name.localeCompare(b.name, undefined, {numeric:true});
+                    });
+
+                    let txt = "*🚜 FRENTES TRATOS*\n";
+                    for (let f of sorted) {
+                        if (f.blocks.length === 0) continue; 
+                        txt += "*" + f.name + "*\n";
+                        f.blocks.sort((a,b) => b.acts.length - a.acts.length);
+                        
+                        for (let bl of f.blocks) {
+                            
+                            let bVal = bl.b ? bl.b.toString().toUpperCase().trim() : "";
+                            let isBlocoVazio = !bVal || bVal === "N/A" || bVal === "-" || bVal === "0" || bVal === "N" || bVal === "NA" || ["SJO", "AND", "CRZ", "TAN", "MAN", "VER"].includes(bVal);
+
+                            let osVal = bl.os ? bl.os.toString().toUpperCase().trim() : "";
+                            let isOsVazia = !osVal || osVal === "N/A" || osVal === "-" || osVal === "0" || osVal === "N" || osVal === "NA" || osVal.includes("N/A") || osVal.includes("NA") || osVal.includes("N / A");
+
+                            let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal);
+
+                            if (isBlocoVazio && isOsVazia) {
+                                txt += "*OS:* N/A\n";
+                            } else if (isBlocoVazio) {
+                                txt += "*OS:* " + bl.os + "\n";
+                            } else if (isOsVazia) {
+                                if (isApenasLetras) {
+                                    txt += "*BLOCO:* " + bl.b + "\n";
+                                } else {
+                                    txt += "*BLOCO:* " + bl.b + " / *OS:* N/A\n";
+                                }
+                            } else {
+                                if (isApenasLetras && (osVal.includes("N/A") || osVal.includes("NA") || osVal.includes("N / A"))) {
+                                    txt += "*BLOCO:* " + bl.b + "\n";
+                                } else {
+                                    txt += "*BLOCO:* " + bl.b + " / *OS:* " + bl.os + "\n";
+                                }
+                            }
+
+                            for (let a of bl.acts) {
+                                let it = a;
+                                if (f.name.includes("HERBICIDA")) {
+                                    let frotaPura = a.replace('✅', '').replace('🟡', '').split(' - ')[0].trim();
+                                    let r = await askHerbicidaType(frotaPura);
+                                    if(r) it += " - " + r;
+                                }
+                                txt += it + "\n";
+                            }
+                            
+                            if (bl.stps.length) { 
+                                txt += "*🚨 PARADAS*\n"; 
+                                bl.stps.forEach(s => txt += s + "\n"); 
+                            }
+                            txt += "\n";
+                        }
+                        txt += "\n";
+                    }
+
+                    let mud = await askDynamicForm('mudancas');
+                    let cham = await askDynamicForm('chamados');
+                    
+                    let obsCustom = await askObsForm();
+                    let obsFinal = obsCustom ? "\n\n*OBS:*\n" + obsCustom : "";
+                    
+                    let conOutput = Object.keys(cMap).length > 0 ? Object.values(cMap).join("\n") : "N/A";
+
+                    document.getElementById('resultado').innerText = txt.trimEnd() + 
+                    obsFinal + 
+                    "\n---------------------------------------------------------------------------------------------------------------------------------\n\n*CHAMADOS TECNOLOGIA: (geral para tratos)*\n" + 
+                    (cham.length ? cham.join("\n") : "N/A") + 
+                    "\n\n*CONECTIVIDADE: (equipamentos que estão sem enviar informação)*\n" + 
+                    conOutput + 
+                    "\n\n*MUDANÇA DE FRENTE: (feitas no turno)*\n" + 
+                    (mud.length ? mud.join("\n") : "N/A");
+
+                } catch (err) { 
+                    document.getElementById('resultado').innerText = "Erro: " + err.message; 
+                }
+            }, 50);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    
+    function copiarWhatsApp() { 
+        navigator.clipboard.writeText(document.getElementById('resultado').innerText); 
+        alert("Copiado para WhatsApp!"); 
+    }
+    
+    function copiarTeams() {
+        let t = document.getElementById('resultado').innerText.replace(/\*(.*?)\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+        let d = document.createElement("div"); 
+        d.innerHTML = t; 
+        d.style.position = "fixed"; 
+        d.style.left = "-9999px"; 
+        document.body.appendChild(d);
+        window.getSelection().selectAllChildren(d); 
+        document.execCommand("copy"); 
+        document.body.removeChild(d); 
+        alert("Copiado para Teams!");
+    }
+</script>
+</body>
+</html>
