@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V128 (Supervisora Autônoma) 🤖</title>
+    <title>Checklist Tratos - V129 (Obra-Prima) 🏆</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -60,6 +60,20 @@
             color: #fff; 
             cursor: pointer;
         }
+        
+        /* ÍCONES DE CALENDÁRIO E RELÓGIO EM VERMELHO */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(36%) sepia(87%) saturate(5428%) hue-rotate(342deg) brightness(98%) contrast(105%);
+            cursor: pointer;
+            opacity: 1;
+            transition: transform 0.2s ease;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        input[type="time"]::-webkit-calendar-picker-indicator:hover {
+            transform: scale(1.15);
+        }
+
         .btn-gerar { 
             background: linear-gradient(135deg, #4CAF50, #2E7D32); 
             width: 100%; 
@@ -157,7 +171,7 @@
 </div>
 
 <script>
-    // BLINDAGEM MÁXIMA
+    // A BLINDAGEM MESTRA
     function safeIncludes(target, search) {
         if (target === undefined || target === null) return false;
         let s = String(search).toUpperCase().trim();
@@ -389,8 +403,7 @@
     }
 
     const normalizeStr = (str) => {
-        if (!str) return "";
-        return String(str).toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+        return String(str || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
     };
 
     async function extrairFotosConfig(file) {
@@ -528,7 +541,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura Autônoma V128... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura da Obra-Prima V129... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -548,11 +561,11 @@
                     let frentesTurno = new Set();
                     let frentesChuva = new Set();
 
-                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA"];
+                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "OFICINA", "OFC", "TRANSP", "SOQUEIRA"];
                     const now = new Date();
 
+                    // CONSTRUÇÃO DO MAPA DE PARADAS DA V83 (A base de ouro)
                     let pMap = {};
-                    // V83 ORIGINAL: Construção do pMap (aba Paradas)
                     for (let sn of workbook.SheetNames) {
                         let nameUpper = sn.toUpperCase();
                         if (safeIncludes(nameUpper, "PARADA") || safeIncludes(nameUpper, "QUADRO") || safeIncludes(nameUpper, "STATUS") || safeIncludes(nameUpper, "MECANICA") || safeIncludes(nameUpper, "MANUT") || safeIncludes(nameUpper, "OFICINA")) {
@@ -613,7 +626,7 @@
                         if (safeIncludes(textScan, "MANDU") || safeIncludes(textScan, "MAN -") || safeIncludes(textScan, "UIM")) unit = "MAN";
                         else if (safeIncludes(textScan, "SÃO JOSÉ") || safeIncludes(textScan, "SJO -") || safeIncludes(textScan, "UISJ")) unit = "SJO";
                         else if (safeIncludes(textScan, "ANDRADE") || safeIncludes(textScan, "AND -") || safeIncludes(textScan, "UIA")) unit = "AND";
-                        else if (safeIncludes(textScan, "CRUZ ALTA") || safeIncludes(textScan, "CRZ") || safeIncludes(textScan, "UICA")) unit = "CRZ";
+                        else if (safeIncludes(textScan, "CRZ") || safeIncludes(textScan, "CRUZ ALTA") || safeIncludes(textScan, "UICA")) unit = "CRZ";
                         else if (safeIncludes(textScan, "TANABI") || safeIncludes(textScan, "TAN -") || safeIncludes(textScan, "UIT")) unit = "TAN";
 
                         for (let r = 0; r < rows.length; r++) {
@@ -649,11 +662,11 @@
                                     
                                     if (startR === -1 || cEquip === -1) continue;
 
-                                    // A MURALHA ANTI-ROUBO (Fix do N/A da foto)
+                                    // A MURALHA ANTI-ROUBO DE O.S DA V125 (Olha só até 3 colunas pro lado)
                                     for (let scanRow = Math.max(0, startR - 4); scanRow < startR; scanRow++) {
                                         if (!rows[scanRow]) continue;
                                         
-                                        let maxCol = cEquip + 3; // Limite de 3 colunas
+                                        let maxCol = cEquip + 3;
                                         for (let scanCol = Math.max(0, cEquip - 2); scanCol <= maxCol; scanCol++) {
                                             let cellText = String(rows[scanRow][scanCol] || "").toUpperCase().trim();
                                             if (cellText === "") continue;
@@ -702,7 +715,6 @@
                                                   
                                     let name = unit + " - " + nameRaw;
 
-                                    // LER O STATUS DA FRENTE (No Cabeçalho)
                                     let statusFrente = "";
                                     for (let j = 1; j <= 5; j++) {
                                         if (rows[r][c+j]) statusFrente += String(rows[r][c+j]) + " ";
@@ -729,7 +741,6 @@
                                     let dr = startR;
                                     let blankCount = 0;
                                     
-                                    // Limite de profundidade para cortar o Lixo do Excel
                                     while (dr < rows.length && dr < startR + 30) {
                                         let rowData = rows[dr];
                                         
@@ -740,6 +751,12 @@
                                         }
 
                                         let rowTextRaw = normalizeStr(rowData.join(" "));
+                                        
+                                        // O CORTA-GIRO DA LIXEIRA DO EXCEL (Resolveu a bagunça do Jonh Deere e Mercedes!)
+                                        if (safeIncludes(rowTextRaw, "JONH DEERE") || safeIncludes(rowTextRaw, "JOHN DEERE") || safeIncludes(rowTextRaw, "MERCEDES") || safeIncludes(rowTextRaw, "MERCEDEZ") || safeIncludes(rowTextRaw, "VOLVO") || safeIncludes(rowTextRaw, "SCANIA") || safeIncludes(rowTextRaw, "VALTRA") || safeIncludes(rowTextRaw, "CASE PUMA") || safeIncludes(rowTextRaw, "CASE MAGNUM") || safeIncludes(rowTextRaw, "NEW HOLLAND") || safeIncludes(rowTextRaw, "VW ") || safeIncludes(rowTextRaw, "VOLKSWAGEN")) {
+                                            break;
+                                        }
+
                                         if (safeIncludes(rowTextRaw, "OBSERVA") || safeIncludes(rowTextRaw, "OBS:") || /(^|\s)OBS($|\s)/.test(rowTextRaw)) {
                                             break;
                                         }
@@ -769,8 +786,7 @@
                                         }
                                         
                                         blankCount = 0; 
-                                        
-                                        // O CORTA-GIRO DO EXCEL
+
                                         if (frota.length > 6) { dr++; continue; }
 
                                         if (fData[name].seenFrotas.has(frota)) { dr++; continue; }
@@ -781,7 +797,6 @@
                                         let stUpper = cStatus !== -1 ? String(rowData[cStatus] || "").toUpperCase().trim() : "";
                                         if (cStatus === -1) stUpper = String(rowData[baseC+2] || "").toUpperCase().trim();
 
-                                        // O CORTA-GIRO DE STATUS "46129.69"
                                         if (/^\d{5,}\.\d{4,}$/.test(stUpper)) {
                                             break;
                                         }
@@ -833,7 +848,7 @@
                                         let isMudancaStatus = safeIncludes(finalReason, "MUDANÇA") || safeIncludes(finalReason, "MUDANCA");
                                         let isActive = false;
 
-                                        // A SOBERANIA DO ATIVO V113 ✅ (Corrige a ausência do Herbicida)
+                                        // A SOBERANIA DA TELA PRINCIPAL (O Verdinho Perfeito)
                                         let isExplicitlyActive = safeIncludes(stUpper, "ATIVO") || safeIncludes(stUpper, "TRABALHANDO") || stUpper === "OK" || safeIncludes(stUpper, "PROPRIO");
 
                                         if (stUpper === "" || isExplicitlyActive) {
@@ -843,6 +858,7 @@
                                             isActive = false;
                                         }
                                         
+                                        // Se não foi anotado como Ativo na tela, a aba parada assume o controle.
                                         if (pMap[frota] && !isMudancaStatus && !isExplicitlyActive) {
                                             isActive = false; 
                                         }
@@ -868,23 +884,22 @@
                         }
                     }
 
-                    // A SUPERVISORA AUTÔNOMA (O SUCESSO DA FOTO CHUVA/TURNO)!
+                    // A SUPERVISORA AUTÔNOMA
                     for (let key in fData) {
                         let f = fData[key];
                         
                         let hasActive = false;
                         let hasMismatchedTurno = false;
                         let hasMismatchedChuva = false;
-                        let totalStps = 0; // Conta quantos tratores tem de fato parados
+                        let totalStps = 0;
                         
                         for (let bl of f.blocks) {
                             if (bl.acts.length > 0) hasActive = true;
                             totalStps += bl.stps.length;
-                            
                             for (let stp of bl.stps) {
                                 let stpUpper = stp.toUpperCase();
                                 
-                                let isTurnoStp = safeIncludes(stpUpper, "TURNO S. OPERA") || safeIncludes(stpUpper, "TURNO SEM OPERA") || safeIncludes(stpUpper, "TURNO S OPERA");
+                                let isTurnoStp = safeIncludes(stpUpper, "TURNO S. OPERA") || safeIncludes(stpUpper, "TURNO SEM OPERA") || safeIncludes(stpUpper, "TURNO S OPERA") || safeIncludes(stpUpper, "TURNO S. OPERAÇÃO");
                                 if (!isTurnoStp) hasMismatchedTurno = true;
                                 
                                 let isChuvaStp = safeIncludes(stpUpper, "CHUVA") || safeIncludes(stpUpper, "UMIDO") || safeIncludes(stpUpper, "ÚMIDO");
@@ -892,7 +907,6 @@
                             }
                         }
 
-                        // O SEGREDO: Mesmo se o operador deixar o cabeçalho em branco, se TODOS os tratores da frente estiverem parados por Turno ou Chuva, a frente sobe!
                         let allTurno = (!hasActive && !hasMismatchedTurno && totalStps > 0);
                         let allChuva = (!hasActive && !hasMismatchedChuva && totalStps > 0);
 
@@ -938,7 +952,6 @@
                         
                         for (let bl of f.blocks) {
                             
-                            // A REGRA DO BEBEDOURO / N/A COM OS MÚLTIPLAS
                             let bVal = bl.b ? bl.b.toString().toUpperCase().trim() : "";
                             let isBlocoVazio = !bVal || bVal === "N/A" || bVal === "-" || bVal === "0" || bVal === "N" || bVal === "NA" || safeIncludes(["SJO", "AND", "CRZ", "TAN", "MAN", "VER"], bVal);
 
@@ -949,22 +962,15 @@
 
                             if (isBlocoVazio && isOsVazia) {
                                 txt += "*OS:* N/A\n";
+                            } else if (isApenasLetras && isOsVazia) {
+                                txt += "*BLOCO:* " + bl.b + "\n"; 
+                            } else if (isApenasLetras && !isOsVazia) {
+                                txt += "*BLOCO:* " + bl.b + " / *OS:* " + bl.os + "\n";
                             } else if (isBlocoVazio && !isOsVazia) {
-                                txt += "*BLOCO:* N/A / *OS:* " + bl.os + "\n"; // Restaura a palavra BLOCO
+                                // O FIX DO BLOCO N/A COM MÚLTIPLAS OS
+                                txt += "*BLOCO:* N/A / *OS:* " + bl.os + "\n"; 
                             } else {
-                                if (isOsVazia) {
-                                    if (isApenasLetras) {
-                                        txt += "*BLOCO:* " + bl.b + "\n"; 
-                                    } else {
-                                        txt += "*BLOCO:* " + bl.b + " / *OS:* N/A\n";
-                                    }
-                                } else {
-                                    if (isApenasLetras && (safeIncludes(osVal, "N/A") || safeIncludes(osVal, "NA") || safeIncludes(osVal, "N / A"))) {
-                                        txt += "*BLOCO:* " + bl.b + "\n";
-                                    } else {
-                                        txt += "*BLOCO:* " + bl.b + " / *OS:* " + bl.os + "\n";
-                                    }
-                                }
+                                txt += "*BLOCO:* " + bl.b + " / *OS:* " + bl.os + "\n";
                             }
 
                             for (let a of bl.acts) {
