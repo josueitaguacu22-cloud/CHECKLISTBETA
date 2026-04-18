@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V124 (A Fortaleza Inquebrável) 🏰</title>
+    <title>Checklist Tratos - V128 (Supervisora Autônoma) 🤖</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -157,7 +157,7 @@
 </div>
 
 <script>
-    // BLINDAGEM MÁXIMA PARA CÉLULAS VAZIAS E FANTASMAS DO EXCEL
+    // BLINDAGEM MÁXIMA
     function safeIncludes(target, search) {
         if (target === undefined || target === null) return false;
         let s = String(search).toUpperCase().trim();
@@ -389,7 +389,8 @@
     }
 
     const normalizeStr = (str) => {
-        return String(str || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
+        if (!str) return "";
+        return String(str).toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
     };
 
     async function extrairFotosConfig(file) {
@@ -527,7 +528,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura da Fortaleza V124... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura Autônoma V128... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -546,11 +547,12 @@
                     
                     let frentesTurno = new Set();
                     let frentesChuva = new Set();
-                    
+
                     const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA"];
                     const now = new Date();
 
                     let pMap = {};
+                    // V83 ORIGINAL: Construção do pMap (aba Paradas)
                     for (let sn of workbook.SheetNames) {
                         let nameUpper = sn.toUpperCase();
                         if (safeIncludes(nameUpper, "PARADA") || safeIncludes(nameUpper, "QUADRO") || safeIncludes(nameUpper, "STATUS") || safeIncludes(nameUpper, "MECANICA") || safeIncludes(nameUpper, "MANUT") || safeIncludes(nameUpper, "OFICINA")) {
@@ -564,7 +566,7 @@
 
                                 for (let c = 0; c < rw.length; c++) {
                                     let m = String(rw[c]||"").trim().match(/\b(\d{4,6})\b/);
-                                    if (m) { 
+                                    if (m && String(rw[c]).trim().length < 10) { 
                                         frota = m[1]; 
                                         frotaCol = c; 
                                         break; 
@@ -573,16 +575,24 @@
 
                                 if (frota) {
                                     let dStr = null;
-                                    for (let c = frotaCol + 1; c < rw.length; c++) {
-                                        let p = parseSafeDate(rw[c]);
+                                    let pReason = null;
+                                    for (let c = 0; c < rw.length; c++) {
+                                        if (c === frotaCol) continue;
+                                        let cellVal = rw[c];
+                                        if (cellVal === undefined || cellVal === null || cellVal === "") continue;
+
+                                        let p = parseSafeDate(cellVal);
                                         if (p) {
-                                            dStr = p.str;
-                                            if (safeIncludes(p.str, '/')) break;
+                                            if (!dStr) dStr = p.str;
+                                            if (safeIncludes(p.str, '/')) dStr = p.str;
+                                        } else {
+                                            let textVal = String(cellVal).toUpperCase().trim();
+                                            if (textVal.length > 3 && !safeIncludes(textVal, "FROTA") && !safeIncludes(textVal, "EQUIP") && !safeIncludes(textVal, "DATA") && !safeIncludes(textVal, "HORA") && !safeIncludes(textVal, "MINUTO")) {
+                                                if (!pReason) pReason = textVal;
+                                            }
                                         }
                                     }
-                                    if (dStr) {
-                                        pMap[frota] = dStr;
-                                    }
+                                    pMap[frota] = { time: dStr || "", reason: pReason || "" };
                                 }
                             }
                         }
@@ -590,7 +600,9 @@
 
                     for (let sn of workbook.SheetNames) {
                         let snUpper = sn.toUpperCase();
-                        if (!safeIncludes(snUpper, "EQUIPAMENTO") && !safeIncludes(snUpper, "SÃO JOSÉ") && !safeIncludes(snUpper, "TRATOS") && !safeIncludes(snUpper, "MANDU") && !safeIncludes(snUpper, "ANDRADE") && !safeIncludes(snUpper, "CRZ") && !safeIncludes(snUpper, "TANABI")) continue;
+                        
+                        // IGNORA AS ABAS DE PARADAS PARA NÃO REPETIR
+                        if (safeIncludes(snUpper, "PARADA") || safeIncludes(snUpper, "MECANICA") || safeIncludes(snUpper, "MANUT") || safeIncludes(snUpper, "OFICINA") || safeIncludes(snUpper, "CONFIG") || safeIncludes(snUpper, "DADOS") || safeIncludes(snUpper, "TABELA")) continue;
                         
                         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], {header: 1});
                         
@@ -612,9 +624,8 @@
                                 
                                 if (keywords.some(k => safeIncludes(cell, k))) {
                                     
-                                    // A BLINDAGEM MÁXIMA DA OFICINA (Impede de travar na gaveta invisível)
                                     let isOfc = safeIncludes(cell, "OFICINA") || safeIncludes(cell, "OFC");
-                                    if (isOfc) continue; // Pula a tabela OFICINA na mesma hora, pois puxamos direto da aba Paradas.
+                                    if (isOfc) continue; 
                                     
                                     let b = "N/A";
                                     let os = "N/A";
@@ -638,10 +649,12 @@
                                     
                                     if (startR === -1 || cEquip === -1) continue;
 
+                                    // A MURALHA ANTI-ROUBO (Fix do N/A da foto)
                                     for (let scanRow = Math.max(0, startR - 4); scanRow < startR; scanRow++) {
                                         if (!rows[scanRow]) continue;
                                         
-                                        for (let scanCol = Math.max(0, cEquip - 2); scanCol <= cEquip + 6; scanCol++) {
+                                        let maxCol = cEquip + 3; // Limite de 3 colunas
+                                        for (let scanCol = Math.max(0, cEquip - 2); scanCol <= maxCol; scanCol++) {
                                             let cellText = String(rows[scanRow][scanCol] || "").toUpperCase().trim();
                                             if (cellText === "") continue;
 
@@ -651,6 +664,7 @@
                                                     b = mB[1].trim();
                                                 } else {
                                                     for (let n = 1; n <= 3; n++) {
+                                                        if (scanCol + n > maxCol) break;
                                                         let nextVal = String(rows[scanRow][scanCol + n] || "").trim();
                                                         if (nextVal !== "") { b = nextVal; break; }
                                                     }
@@ -663,6 +677,7 @@
                                                     os = mO[1].trim();
                                                 } else {
                                                     for (let n = 1; n <= 3; n++) {
+                                                        if (scanCol + n > maxCol) break;
                                                         let nextVal = String(rows[scanRow][scanCol + n] || "").trim();
                                                         if (nextVal !== "") { os = nextVal; break; }
                                                     }
@@ -687,6 +702,7 @@
                                                   
                                     let name = unit + " - " + nameRaw;
 
+                                    // LER O STATUS DA FRENTE (No Cabeçalho)
                                     let statusFrente = "";
                                     for (let j = 1; j <= 5; j++) {
                                         if (rows[r][c+j]) statusFrente += String(rows[r][c+j]) + " ";
@@ -713,9 +729,10 @@
                                     let dr = startR;
                                     let blankCount = 0;
                                     
-                                    // Limite de profundidade para cortar os lixos fantasmas
+                                    // Limite de profundidade para cortar o Lixo do Excel
                                     while (dr < rows.length && dr < startR + 30) {
                                         let rowData = rows[dr];
+                                        
                                         if (!rowData || String(rowData.join("")).trim() === "") { 
                                             blankCount++;
                                             if (blankCount >= 3) break;
@@ -753,22 +770,18 @@
                                         
                                         blankCount = 0; 
                                         
-                                        // CORTA-GIRO: Impede de processar os números monstruosos de data escondidos (ex: 46129.69)
+                                        // O CORTA-GIRO DO EXCEL
                                         if (frota.length > 6) { dr++; continue; }
 
                                         if (fData[name].seenFrotas.has(frota)) { dr++; continue; }
                                         fData[name].seenFrotas.add(frota);
                                         
-                                        let impl = frota;
-                                        if (cImpl !== -1 && rowData[cImpl]) {
-                                            let mImpl = String(rowData[cImpl]).match(/^\d+/);
-                                            if (mImpl) impl = mImpl[0];
-                                        }
-
+                                        let mImpl = String(rowData[baseC+1] || frota).match(/^\d+/);
+                                        let impl = mImpl ? mImpl[0] : frota;
                                         let stUpper = cStatus !== -1 ? String(rowData[cStatus] || "").toUpperCase().trim() : "";
                                         if (cStatus === -1) stUpper = String(rowData[baseC+2] || "").toUpperCase().trim();
 
-                                        // SEGUNDO CORTA-GIRO DE NÚMERO ESTRANHO
+                                        // O CORTA-GIRO DE STATUS "46129.69"
                                         if (/^\d{5,}\.\d{4,}$/.test(stUpper)) {
                                             break;
                                         }
@@ -814,16 +827,13 @@
                                         let isTransp = safeIncludes(nameRaw, "TRANSP"); 
                                         let textoImplemento = (isTransp || impl === frota) ? "" : " - " + impl;
 
-                                        // ==========================================
-                                        // O SEGREDO DO SUCESSO DO VERDINHO (ATIVO ✅)
-                                        // ==========================================
                                         let finalReason = stUpper;
                                         if (!finalReason || finalReason === "") finalReason = reasonParada;
 
                                         let isMudancaStatus = safeIncludes(finalReason, "MUDANÇA") || safeIncludes(finalReason, "MUDANCA");
                                         let isActive = false;
 
-                                        // Se na frente o operador botar explicitamente ATIVO, o trator ganha o verde na hora.
+                                        // A SOBERANIA DO ATIVO V113 ✅ (Corrige a ausência do Herbicida)
                                         let isExplicitlyActive = safeIncludes(stUpper, "ATIVO") || safeIncludes(stUpper, "TRABALHANDO") || stUpper === "OK" || safeIncludes(stUpper, "PROPRIO");
 
                                         if (stUpper === "" || isExplicitlyActive) {
@@ -833,7 +843,6 @@
                                             isActive = false;
                                         }
                                         
-                                        // Se o operador botou "ATIVO", a aba de paradas NUNCA vai roubar o Verdinho dele de volta!
                                         if (pMap[frota] && !isMudancaStatus && !isExplicitlyActive) {
                                             isActive = false; 
                                         }
@@ -859,20 +868,22 @@
                         }
                     }
 
-                    // A SUPERVISORA AVALIANDO AS FRENTES!
+                    // A SUPERVISORA AUTÔNOMA (O SUCESSO DA FOTO CHUVA/TURNO)!
                     for (let key in fData) {
                         let f = fData[key];
                         
                         let hasActive = false;
                         let hasMismatchedTurno = false;
                         let hasMismatchedChuva = false;
+                        let totalStps = 0; // Conta quantos tratores tem de fato parados
                         
                         for (let bl of f.blocks) {
                             if (bl.acts.length > 0) hasActive = true;
+                            totalStps += bl.stps.length;
+                            
                             for (let stp of bl.stps) {
                                 let stpUpper = stp.toUpperCase();
                                 
-                                // Se for TROCA DE TURNO, hasMismatched vai virar verdadeiro, e a frente NÃO sobe para a caixa!
                                 let isTurnoStp = safeIncludes(stpUpper, "TURNO S. OPERA") || safeIncludes(stpUpper, "TURNO SEM OPERA") || safeIncludes(stpUpper, "TURNO S OPERA");
                                 if (!isTurnoStp) hasMismatchedTurno = true;
                                 
@@ -881,10 +892,14 @@
                             }
                         }
 
-                        if (f.isTurno && !hasActive && !hasMismatchedTurno) {
+                        // O SEGREDO: Mesmo se o operador deixar o cabeçalho em branco, se TODOS os tratores da frente estiverem parados por Turno ou Chuva, a frente sobe!
+                        let allTurno = (!hasActive && !hasMismatchedTurno && totalStps > 0);
+                        let allChuva = (!hasActive && !hasMismatchedChuva && totalStps > 0);
+
+                        if ((f.isTurno || allTurno) && !hasActive && !hasMismatchedTurno) {
                             frentesTurno.add(f.name);
                             f.skipPrint = true; 
-                        } else if (f.isChuva && !hasActive && !hasMismatchedChuva) {
+                        } else if ((f.isChuva || allChuva) && !hasActive && !hasMismatchedChuva) {
                             frentesChuva.add(f.name);
                             f.skipPrint = true;
                         }
@@ -910,7 +925,6 @@
                     }
                     
                     if (topBoxes.length > 0) {
-                        // EXATAMENTE 2 QUEBRAS DE LINHA (Enters)
                         txt += "\n" + topBoxes.join("\n\n") + "\n\n\n";
                     } else {
                         txt += "\n";
@@ -924,7 +938,7 @@
                         
                         for (let bl of f.blocks) {
                             
-                            // A REGRA DA LETRA DE BLOCO (ex: BEBEDOURO)
+                            // A REGRA DO BEBEDOURO / N/A COM OS MÚLTIPLAS
                             let bVal = bl.b ? bl.b.toString().toUpperCase().trim() : "";
                             let isBlocoVazio = !bVal || bVal === "N/A" || bVal === "-" || bVal === "0" || bVal === "N" || bVal === "NA" || safeIncludes(["SJO", "AND", "CRZ", "TAN", "MAN", "VER"], bVal);
 
@@ -936,7 +950,7 @@
                             if (isBlocoVazio && isOsVazia) {
                                 txt += "*OS:* N/A\n";
                             } else if (isBlocoVazio && !isOsVazia) {
-                                txt += "*OS:* " + bl.os + "\n";
+                                txt += "*BLOCO:* N/A / *OS:* " + bl.os + "\n"; // Restaura a palavra BLOCO
                             } else {
                                 if (isOsVazia) {
                                     if (isApenasLetras) {
@@ -955,7 +969,6 @@
 
                             for (let a of bl.acts) {
                                 let it = a;
-                                // Herbicida pergunta normalmente
                                 if (safeIncludes(f.name, "HERBICIDA")) {
                                     let frotaPura = a.replace('✅ ', '').replace('✅', '').replace('🟡 ', '').replace('🟡', '').split(' - ')[0].trim();
                                     let r = await askHerbicidaType(frotaPura);
