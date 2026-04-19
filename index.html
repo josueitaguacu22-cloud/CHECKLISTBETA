@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V129 (Obra-Prima) 🏆</title>
+    <title>Checklist Tratos - V131 (A Perfeição Textual) 🎯</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -541,7 +541,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura da Obra-Prima V129... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura da Obra-Prima V131... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -564,7 +564,6 @@
                     const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "OFICINA", "OFC", "TRANSP", "SOQUEIRA"];
                     const now = new Date();
 
-                    // CONSTRUÇÃO DO MAPA DE PARADAS DA V83 (A base de ouro)
                     let pMap = {};
                     for (let sn of workbook.SheetNames) {
                         let nameUpper = sn.toUpperCase();
@@ -614,7 +613,6 @@
                     for (let sn of workbook.SheetNames) {
                         let snUpper = sn.toUpperCase();
                         
-                        // IGNORA AS ABAS DE PARADAS PARA NÃO REPETIR
                         if (safeIncludes(snUpper, "PARADA") || safeIncludes(snUpper, "MECANICA") || safeIncludes(snUpper, "MANUT") || safeIncludes(snUpper, "OFICINA") || safeIncludes(snUpper, "CONFIG") || safeIncludes(snUpper, "DADOS") || safeIncludes(snUpper, "TABELA")) continue;
                         
                         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], {header: 1});
@@ -662,11 +660,10 @@
                                     
                                     if (startR === -1 || cEquip === -1) continue;
 
-                                    // A MURALHA ANTI-ROUBO DE O.S DA V125 (Olha só até 3 colunas pro lado)
                                     for (let scanRow = Math.max(0, startR - 4); scanRow < startR; scanRow++) {
                                         if (!rows[scanRow]) continue;
                                         
-                                        let maxCol = cEquip + 3;
+                                        let maxCol = cEquip + 3; 
                                         for (let scanCol = Math.max(0, cEquip - 2); scanCol <= maxCol; scanCol++) {
                                             let cellText = String(rows[scanRow][scanCol] || "").toUpperCase().trim();
                                             if (cellText === "") continue;
@@ -751,12 +748,6 @@
                                         }
 
                                         let rowTextRaw = normalizeStr(rowData.join(" "));
-                                        
-                                        // O CORTA-GIRO DA LIXEIRA DO EXCEL (Resolveu a bagunça do Jonh Deere e Mercedes!)
-                                        if (safeIncludes(rowTextRaw, "JONH DEERE") || safeIncludes(rowTextRaw, "JOHN DEERE") || safeIncludes(rowTextRaw, "MERCEDES") || safeIncludes(rowTextRaw, "MERCEDEZ") || safeIncludes(rowTextRaw, "VOLVO") || safeIncludes(rowTextRaw, "SCANIA") || safeIncludes(rowTextRaw, "VALTRA") || safeIncludes(rowTextRaw, "CASE PUMA") || safeIncludes(rowTextRaw, "CASE MAGNUM") || safeIncludes(rowTextRaw, "NEW HOLLAND") || safeIncludes(rowTextRaw, "VW ") || safeIncludes(rowTextRaw, "VOLKSWAGEN")) {
-                                            break;
-                                        }
-
                                         if (safeIncludes(rowTextRaw, "OBSERVA") || safeIncludes(rowTextRaw, "OBS:") || /(^|\s)OBS($|\s)/.test(rowTextRaw)) {
                                             break;
                                         }
@@ -786,7 +777,7 @@
                                         }
                                         
                                         blankCount = 0; 
-
+                                        
                                         if (frota.length > 6) { dr++; continue; }
 
                                         if (fData[name].seenFrotas.has(frota)) { dr++; continue; }
@@ -848,7 +839,6 @@
                                         let isMudancaStatus = safeIncludes(finalReason, "MUDANÇA") || safeIncludes(finalReason, "MUDANCA");
                                         let isActive = false;
 
-                                        // A SOBERANIA DA TELA PRINCIPAL (O Verdinho Perfeito)
                                         let isExplicitlyActive = safeIncludes(stUpper, "ATIVO") || safeIncludes(stUpper, "TRABALHANDO") || stUpper === "OK" || safeIncludes(stUpper, "PROPRIO");
 
                                         if (stUpper === "" || isExplicitlyActive) {
@@ -858,7 +848,6 @@
                                             isActive = false;
                                         }
                                         
-                                        // Se não foi anotado como Ativo na tela, a aba parada assume o controle.
                                         if (pMap[frota] && !isMudancaStatus && !isExplicitlyActive) {
                                             isActive = false; 
                                         }
@@ -884,7 +873,6 @@
                         }
                     }
 
-                    // A SUPERVISORA AUTÔNOMA
                     for (let key in fData) {
                         let f = fData[key];
                         
@@ -958,19 +946,24 @@
                             let osVal = bl.os ? bl.os.toString().toUpperCase().trim() : "";
                             let isOsVazia = !osVal || osVal === "N/A" || safeIncludes(osVal, "N/A") || safeIncludes(osVal, "NA") || safeIncludes(osVal, "N / A") || osVal === "-" || osVal === "0" || osVal === "N";
 
-                            let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal); 
+                            let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal) && !isBlocoVazio;
 
+                            // A MÁGICA TEXTUAL DA V131
                             if (isBlocoVazio && isOsVazia) {
                                 txt += "*OS:* N/A\n";
-                            } else if (isApenasLetras && isOsVazia) {
-                                txt += "*BLOCO:* " + bl.b + "\n"; 
-                            } else if (isApenasLetras && !isOsVazia) {
-                                txt += "*BLOCO:* " + bl.b + " / *OS:* " + bl.os + "\n";
                             } else if (isBlocoVazio && !isOsVazia) {
-                                // O FIX DO BLOCO N/A COM MÚLTIPLAS OS
-                                txt += "*BLOCO:* N/A / *OS:* " + bl.os + "\n"; 
+                                txt += "*OS:* " + bl.os + "\n";
                             } else {
-                                txt += "*BLOCO:* " + bl.b + " / *OS:* " + bl.os + "\n";
+                                let prefixo = isApenasLetras ? "*LOCAL:*" : "*BLOCO:*";
+                                if (isOsVazia) {
+                                    if (isApenasLetras) {
+                                        txt += prefixo + " " + bl.b + "\n"; 
+                                    } else {
+                                        txt += prefixo + " " + bl.b + " / *OS:* N/A\n"; // <- O FIX DE AGORA
+                                    }
+                                } else {
+                                    txt += prefixo + " " + bl.b + " / *OS:* " + bl.os + "\n";
+                                }
                             }
 
                             for (let a of bl.acts) {
