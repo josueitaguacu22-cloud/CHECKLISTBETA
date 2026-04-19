@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V131 (A Perfeição Textual) 🎯</title>
+    <title>Checklist Tratos - V130 (O Toque de Ouro) ✨</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -541,7 +541,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura da Obra-Prima V131... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura Suprema V130... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -565,6 +565,7 @@
                     const now = new Date();
 
                     let pMap = {};
+                    // V83 ORIGINAL CADEADO
                     for (let sn of workbook.SheetNames) {
                         let nameUpper = sn.toUpperCase();
                         if (safeIncludes(nameUpper, "PARADA") || safeIncludes(nameUpper, "QUADRO") || safeIncludes(nameUpper, "STATUS") || safeIncludes(nameUpper, "MECANICA") || safeIncludes(nameUpper, "MANUT") || safeIncludes(nameUpper, "OFICINA")) {
@@ -595,8 +596,12 @@
 
                                         let p = parseSafeDate(cellVal);
                                         if (p) {
-                                            if (!dStr) dStr = p.str;
-                                            if (safeIncludes(p.str, '/')) dStr = p.str;
+                                            // CADEADO V132: Tranca na primeira data lida e ignora a Previsão
+                                            if (!dStr) {
+                                                dStr = p.str;
+                                            } else if (!safeIncludes(dStr, '/') && safeIncludes(p.str, '/')) {
+                                                dStr = p.str;
+                                            }
                                         } else {
                                             let textVal = String(cellVal).toUpperCase().trim();
                                             if (textVal.length > 3 && !safeIncludes(textVal, "FROTA") && !safeIncludes(textVal, "EQUIP") && !safeIncludes(textVal, "DATA") && !safeIncludes(textVal, "HORA") && !safeIncludes(textVal, "MINUTO")) {
@@ -663,7 +668,7 @@
                                     for (let scanRow = Math.max(0, startR - 4); scanRow < startR; scanRow++) {
                                         if (!rows[scanRow]) continue;
                                         
-                                        let maxCol = cEquip + 3; 
+                                        let maxCol = cEquip + 3;
                                         for (let scanCol = Math.max(0, cEquip - 2); scanCol <= maxCol; scanCol++) {
                                             let cellText = String(rows[scanRow][scanCol] || "").toUpperCase().trim();
                                             if (cellText === "") continue;
@@ -748,6 +753,10 @@
                                         }
 
                                         let rowTextRaw = normalizeStr(rowData.join(" "));
+                                        // O CORTA-GIRO DA LIXEIRA EXCEL
+                                        if (safeIncludes(rowTextRaw, "JONH DEERE") || safeIncludes(rowTextRaw, "JOHN DEERE") || safeIncludes(rowTextRaw, "MERCEDES") || safeIncludes(rowTextRaw, "MERCEDEZ") || safeIncludes(rowTextRaw, "VOLVO") || safeIncludes(rowTextRaw, "SCANIA") || safeIncludes(rowTextRaw, "VALTRA") || safeIncludes(rowTextRaw, "CASE PUMA") || safeIncludes(rowTextRaw, "CASE MAGNUM") || safeIncludes(rowTextRaw, "NEW HOLLAND") || safeIncludes(rowTextRaw, "VW ") || safeIncludes(rowTextRaw, "VOLKSWAGEN")) {
+                                            break;
+                                        }
                                         if (safeIncludes(rowTextRaw, "OBSERVA") || safeIncludes(rowTextRaw, "OBS:") || /(^|\s)OBS($|\s)/.test(rowTextRaw)) {
                                             break;
                                         }
@@ -873,6 +882,7 @@
                         }
                     }
 
+                    // A SUPERVISORA AUTÔNOMA
                     for (let key in fData) {
                         let f = fData[key];
                         
@@ -941,25 +951,25 @@
                         for (let bl of f.blocks) {
                             
                             let bVal = bl.b ? bl.b.toString().toUpperCase().trim() : "";
-                            let isBlocoVazio = !bVal || bVal === "N/A" || bVal === "-" || bVal === "0" || bVal === "N" || bVal === "NA" || safeIncludes(["SJO", "AND", "CRZ", "TAN", "MAN", "VER"], bVal);
+                            let isBlocoVazio = !bVal || bVal === "N/A" || bVal === "-" || bVal === "0" || bVal === "N" || bVal === "NA" || bVal === "O.S." || bVal === "OS" || safeIncludes(["SJO", "AND", "CRZ", "TAN", "MAN", "VER"], bVal);
 
                             let osVal = bl.os ? bl.os.toString().toUpperCase().trim() : "";
                             let isOsVazia = !osVal || osVal === "N/A" || safeIncludes(osVal, "N/A") || safeIncludes(osVal, "NA") || safeIncludes(osVal, "N / A") || osVal === "-" || osVal === "0" || osVal === "N";
 
-                            let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal) && !isBlocoVazio;
+                            let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal) && !isBlocoVazio; 
 
-                            // A MÁGICA TEXTUAL DA V131
+                            // A NOVA REGRA DE TEXTO (FIX DO O.S. PURO E LOCAL)
                             if (isBlocoVazio && isOsVazia) {
                                 txt += "*OS:* N/A\n";
                             } else if (isBlocoVazio && !isOsVazia) {
-                                txt += "*OS:* " + bl.os + "\n";
+                                txt += "*OS:* " + bl.os + "\n"; // APENAS A O.S QUANDO O BLOCO É N/A
                             } else {
                                 let prefixo = isApenasLetras ? "*LOCAL:*" : "*BLOCO:*";
                                 if (isOsVazia) {
                                     if (isApenasLetras) {
                                         txt += prefixo + " " + bl.b + "\n"; 
                                     } else {
-                                        txt += prefixo + " " + bl.b + " / *OS:* N/A\n"; // <- O FIX DE AGORA
+                                        txt += prefixo + " " + bl.b + " / *OS:* N/A\n";
                                     }
                                 } else {
                                     txt += prefixo + " " + bl.b + " / *OS:* " + bl.os + "\n";
