@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V130 ✨</title>
+    <title>Checklist Tratos - V133 (Coroação Suprema) 👑</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -171,7 +171,6 @@
 </div>
 
 <script>
-    // A BLINDAGEM MESTRA
     function safeIncludes(target, search) {
         if (target === undefined || target === null) return false;
         let s = String(search).toUpperCase().trim();
@@ -402,6 +401,89 @@
         });
     }
 
+    // 🏆 NOVO FORMULÁRIO DE EQUIPAMENTOS RECOLHIDOS (Sem mexer na lógica de leitura do Excel)
+    async function askRecolhidosForm() {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:9999;";
+
+            overlay.innerHTML = `
+                <div style="background:#2a2a40;padding:25px;border-radius:10px;width:95%;max-width:500px;max-height:85vh;overflow-y:auto;border:1px solid #ff9800;text-align:center;">
+                    <h3 style="color:#ff9800;margin-top:0;font-size:20px;">EQUIPAMENTOS RECOLHIDOS</h3>
+                    <p style="font-size:13px; color:#ccc; margin-top:-10px; margin-bottom:20px;">(Só para equipamentos onde a frente tá no campo e ele separado)</p>
+                    <div id="recList"></div>
+                    <button id="btnAddRec" style="background:rgba(33, 150, 243, 0.2);border:1px dashed #2196F3;color:#2196F3;padding:12px;margin:10px 0;width:100%;border-radius:5px;cursor:pointer;font-weight:bold;">➕ ADICIONAR OUTRO</button>
+                    <button id="btnSaveRec" style="background:#4CAF50;color:#fff;padding:15px;width:100%;border-radius:5px;border:none;cursor:pointer;font-weight:bold;margin-bottom:10px;">💾 CONFIRMAR TODOS</button>
+                    <button id="btnSkipRec" style="background:#ff4444;color:#fff;padding:12px;width:100%;border-radius:5px;border:none;cursor:pointer;font-weight:bold;">NENHUM (Pular)</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const list = document.getElementById('recList');
+            let count = 0;
+
+            function addRow() {
+                count++;
+                const row = document.createElement('div');
+                row.style = "background:#1e1e2f;padding:20px 15px 15px 15px;border-radius:8px;margin-bottom:15px;border:1px solid #4a4a6a;position:relative;text-align:left;";
+                
+                row.innerHTML = `
+                    <span style="position:absolute;top:-10px;left:15px;background:#ff9800;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;">Equipamento ${count}</span>
+                    <input type="text" class="rec-frota" placeholder="Qual a Frota?" style="width:94%;margin:5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <button type="button" class="btn-auto" style="flex:1; padding:10px; background:#2196F3; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">AUTOMOTIVA</button>
+                        <button type="button" class="btn-outro" style="flex:1; padding:10px; background:#ff9800; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">OUTRO</button>
+                    </div>
+                    <input type="text" class="rec-local" placeholder="Digite o local..." style="display:none; width:94%;margin:10px 0 5px 0;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                `;
+                
+                const btnAuto = row.querySelector('.btn-auto');
+                const btnOutro = row.querySelector('.btn-outro');
+                const inpLocal = row.querySelector('.rec-local');
+                
+                btnAuto.onclick = () => {
+                    inpLocal.value = "AUTOMOTIVA";
+                    inpLocal.style.display = "none";
+                    btnAuto.style.border = "2px solid #00ffcc";
+                    btnOutro.style.border = "none";
+                };
+                
+                btnOutro.onclick = () => {
+                    inpLocal.value = "";
+                    inpLocal.style.display = "block";
+                    inpLocal.focus();
+                    btnOutro.style.border = "2px solid #00ffcc";
+                    btnAuto.style.border = "none";
+                };
+
+                list.appendChild(row);
+            }
+            
+            addRow();
+
+            document.getElementById('btnAddRec').onclick = addRow;
+            
+            document.getElementById('btnSkipRec').onclick = () => { 
+                document.body.removeChild(overlay); 
+                resolve({}); 
+            };
+            
+            document.getElementById('btnSaveRec').onclick = () => {
+                const results = {};
+                for (let r of list.children) {
+                    let frota = r.querySelector('.rec-frota').value.trim();
+                    let local = r.querySelector('.rec-local').value.trim();
+                    
+                    if (frota && local) {
+                        results[frota] = local.toUpperCase();
+                    }
+                }
+                document.body.removeChild(overlay);
+                resolve(results);
+            };
+        });
+    }
+
     const normalizeStr = (str) => {
         return String(str || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
     };
@@ -541,7 +623,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura Suprema V130... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura Suprema V133... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -565,7 +647,6 @@
                     const now = new Date();
 
                     let pMap = {};
-                    // V83 ORIGINAL CADEADO
                     for (let sn of workbook.SheetNames) {
                         let nameUpper = sn.toUpperCase();
                         if (safeIncludes(nameUpper, "PARADA") || safeIncludes(nameUpper, "QUADRO") || safeIncludes(nameUpper, "STATUS") || safeIncludes(nameUpper, "MECANICA") || safeIncludes(nameUpper, "MANUT") || safeIncludes(nameUpper, "OFICINA")) {
@@ -596,7 +677,6 @@
 
                                         let p = parseSafeDate(cellVal);
                                         if (p) {
-                                            // CADEADO V132: Tranca na primeira data lida e ignora a Previsão
                                             if (!dStr) {
                                                 dStr = p.str;
                                             } else if (!safeIncludes(dStr, '/') && safeIncludes(p.str, '/')) {
@@ -753,7 +833,6 @@
                                         }
 
                                         let rowTextRaw = normalizeStr(rowData.join(" "));
-                                        // O CORTA-GIRO DA LIXEIRA EXCEL
                                         if (safeIncludes(rowTextRaw, "JONH DEERE") || safeIncludes(rowTextRaw, "JOHN DEERE") || safeIncludes(rowTextRaw, "MERCEDES") || safeIncludes(rowTextRaw, "MERCEDEZ") || safeIncludes(rowTextRaw, "VOLVO") || safeIncludes(rowTextRaw, "SCANIA") || safeIncludes(rowTextRaw, "VALTRA") || safeIncludes(rowTextRaw, "CASE PUMA") || safeIncludes(rowTextRaw, "CASE MAGNUM") || safeIncludes(rowTextRaw, "NEW HOLLAND") || safeIncludes(rowTextRaw, "VW ") || safeIncludes(rowTextRaw, "VOLKSWAGEN")) {
                                             break;
                                         }
@@ -882,7 +961,6 @@
                         }
                     }
 
-                    // A SUPERVISORA AUTÔNOMA
                     for (let key in fData) {
                         let f = fData[key];
                         
@@ -958,11 +1036,10 @@
 
                             let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal) && !isBlocoVazio; 
 
-                            // A NOVA REGRA DE TEXTO (FIX DO O.S. PURO E LOCAL)
                             if (isBlocoVazio && isOsVazia) {
                                 txt += "*OS:* N/A\n";
                             } else if (isBlocoVazio && !isOsVazia) {
-                                txt += "*OS:* " + bl.os + "\n"; // APENAS A O.S QUANDO O BLOCO É N/A
+                                txt += "*OS:* " + bl.os + "\n";
                             } else {
                                 let prefixo = isApenasLetras ? "*LOCAL:*" : "*BLOCO:*";
                                 if (isOsVazia) {
@@ -995,10 +1072,18 @@
                         txt += "\n";
                     }
 
+                    // A EXECUÇÃO DOS FORMULÁRIOS
                     let mud = await askDynamicForm('mudancas');
                     let cham = await askDynamicForm('chamados');
                     let obsCustom = await askObsForm();
+                    let recolhidos = await askRecolhidosForm(); // 🏆 A PERGUNTA FINAL DOS RECOLHIDOS!
                     
+                    // CARIMBANDO OS EQUIPAMENTOS RECOLHIDOS NO TEXTO FINAL
+                    for (let frota in recolhidos) {
+                        let regex = new RegExp("^((?:✅ |🟡 )?" + frota + "\\b.*)$", "gm");
+                        txt = txt.replace(regex, "$1 *" + recolhidos[frota] + "*");
+                    }
+
                     let obsFinalText = obsCustom ? "\n\n*OBS:*\n" + obsCustom : "";
                     let conOutput = Object.keys(cMap).length > 0 ? Object.values(cMap).join("\n") : "N/A";
 
