@@ -1081,7 +1081,7 @@
                     // CARIMBANDO OS EQUIPAMENTOS RECOLHIDOS NO TEXTO FINAL
                     for (let frota in recolhidos) {
                         let regex = new RegExp("^((?:✅ |🟡 )?" + frota + "\\b.*)$", "gm");
-                        txt = txt.replace(regex, "$1 *" + recolhidos[frota] + "*");
+                        txt = txt.replace(regex, "$1 (*" + recolhidos[frota] + "*)");
                     }
 
                     let obsFinalText = obsCustom ? "\n\n*OBS:*\n" + obsCustom : "";
