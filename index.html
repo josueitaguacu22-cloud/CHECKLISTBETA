@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V133 (Coroação Suprema) 👑</title>
+    <title>Checklist Tratos - V136 (Estética Final) 💎</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -401,7 +401,6 @@
         });
     }
 
-    // 🏆 NOVO FORMULÁRIO DE EQUIPAMENTOS RECOLHIDOS (Sem mexer na lógica de leitura do Excel)
     async function askRecolhidosForm() {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
@@ -623,7 +622,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura Suprema V133... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura da Estética Final V136... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -643,7 +642,7 @@
                     let frentesTurno = new Set();
                     let frentesChuva = new Set();
 
-                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "OFICINA", "OFC", "TRANSP", "SOQUEIRA"];
+                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA"];
                     const now = new Date();
 
                     let pMap = {};
@@ -678,13 +677,13 @@
                                         let p = parseSafeDate(cellVal);
                                         if (p) {
                                             if (!dStr) {
-                                                dStr = p.str;
+                                                dStr = p.str; 
                                             } else if (!safeIncludes(dStr, '/') && safeIncludes(p.str, '/')) {
                                                 dStr = p.str;
                                             }
                                         } else {
                                             let textVal = String(cellVal).toUpperCase().trim();
-                                            if (textVal.length > 3 && !safeIncludes(textVal, "FROTA") && !safeIncludes(textVal, "EQUIP") && !safeIncludes(textVal, "DATA") && !safeIncludes(textVal, "HORA") && !safeIncludes(textVal, "MINUTO")) {
+                                            if (textVal.length > 3 && !safeIncludes(textVal, "FROTA") && !safeIncludes(textVal, "EQUIP") && !safeIncludes(textVal, "DATA") && !safeIncludes(textVal, "HORA") && !safeIncludes(textVal, "MINUTO") && !safeIncludes(textVal, "PREVIS")) {
                                                 if (!pReason) pReason = textVal;
                                             }
                                         }
@@ -797,6 +796,10 @@
                                                   
                                     let name = unit + " - " + nameRaw;
 
+                                    if (nameRaw.match(/^\d+/) || nameRaw === "0") {
+                                        continue; 
+                                    }
+
                                     let statusFrente = "";
                                     for (let j = 1; j <= 5; j++) {
                                         if (rows[r][c+j]) statusFrente += String(rows[r][c+j]) + " ";
@@ -832,11 +835,12 @@
                                             dr++; continue; 
                                         }
 
-                                        let rowTextRaw = normalizeStr(rowData.join(" "));
-                                        if (safeIncludes(rowTextRaw, "JONH DEERE") || safeIncludes(rowTextRaw, "JOHN DEERE") || safeIncludes(rowTextRaw, "MERCEDES") || safeIncludes(rowTextRaw, "MERCEDEZ") || safeIncludes(rowTextRaw, "VOLVO") || safeIncludes(rowTextRaw, "SCANIA") || safeIncludes(rowTextRaw, "VALTRA") || safeIncludes(rowTextRaw, "CASE PUMA") || safeIncludes(rowTextRaw, "CASE MAGNUM") || safeIncludes(rowTextRaw, "NEW HOLLAND") || safeIncludes(rowTextRaw, "VW ") || safeIncludes(rowTextRaw, "VOLKSWAGEN")) {
+                                        let rowTextRawStr = String(rowData.join(" ")).toUpperCase();
+                                        
+                                        if (safeIncludes(rowTextRawStr, "JONH DEERE") || safeIncludes(rowTextRawStr, "JOHN DEERE") || safeIncludes(rowTextRawStr, "MERCEDES") || safeIncludes(rowTextRawStr, "MERCEDEZ") || safeIncludes(rowTextRawStr, "VOLVO") || safeIncludes(rowTextRawStr, "SCANIA") || safeIncludes(rowTextRawStr, "VALTRA") || safeIncludes(rowTextRawStr, "CASE PUMA") || safeIncludes(rowTextRawStr, "CASE MAGNUM") || safeIncludes(rowTextRawStr, "NEW HOLLAND") || safeIncludes(rowTextRawStr, "VW ") || safeIncludes(rowTextRawStr, "VOLKSWAGEN")) {
                                             break;
                                         }
-                                        if (safeIncludes(rowTextRaw, "OBSERVA") || safeIncludes(rowTextRaw, "OBS:") || /(^|\s)OBS($|\s)/.test(rowTextRaw)) {
+                                        if (rowTextRawStr.includes("OBSERVA") || rowTextRawStr.includes("OBS:") || rowTextRawStr.includes("OBS.") || /(^|\s)OBS($|\s)/.test(rowTextRawStr)) {
                                             break;
                                         }
                                         
@@ -940,6 +944,7 @@
                                             isActive = false; 
                                         }
 
+                                        // FIX 136: Mantido SEM parênteses para Mudança e Paradas (conforme o seu pedido).
                                         if (isMudancaStatus) {
                                             let txtMud = finalReason ? finalReason.replace("VENTO FORTE","EXCESSO DE VENTO") : "MUDANÇA DE FRENTE";
                                             curBlk.acts.push("🟡 " + frota + textoImplemento + " - " + txtMud);
@@ -954,7 +959,9 @@
                                     }
                                     
                                     if (curBlk.acts.length || curBlk.stps.length) {
-                                        fData[name].blocks.push(curBlk);
+                                        if (!nameRaw.match(/^\d+/) && nameRaw !== "0") {
+                                            fData[name].blocks.push(curBlk);
+                                        }
                                     }
                                 }
                             }
@@ -1058,7 +1065,8 @@
                                 if (safeIncludes(f.name, "HERBICIDA")) {
                                     let frotaPura = a.replace('✅ ', '').replace('✅', '').replace('🟡 ', '').replace('🟡', '').split(' - ')[0].trim();
                                     let r = await askHerbicidaType(frotaPura);
-                                    if(r) it += " - " + r;
+                                    // AQUI: Tirei os parênteses do Herbicida a seu pedido!
+                                    if(r) it += " - " + r; 
                                 }
                                 txt += it + "\n";
                             }
@@ -1072,16 +1080,20 @@
                         txt += "\n";
                     }
 
-                    // A EXECUÇÃO DOS FORMULÁRIOS
                     let mud = await askDynamicForm('mudancas');
                     let cham = await askDynamicForm('chamados');
                     let obsCustom = await askObsForm();
-                    let recolhidos = await askRecolhidosForm(); // 🏆 A PERGUNTA FINAL DOS RECOLHIDOS!
+                    let recolhidos = await askRecolhidosForm(); 
                     
-                    // CARIMBANDO OS EQUIPAMENTOS RECOLHIDOS NO TEXTO FINAL
+                    // Parênteses MANTIDOS apenas no Automotiva/Recolhidos
                     for (let frota in recolhidos) {
-                        let regex = new RegExp("^((?:✅ |🟡 )?" + frota + "\\b.*)$", "gm");
-                        txt = txt.replace(regex, "$1 (*" + recolhidos[frota] + "*)");
+                        let regex = new RegExp("^((?:✅ |🟡 |)?\\d{4,6}\\b.*)$", "gm");
+                        txt = txt.replace(regex, (match) => {
+                            if (match.includes(frota)) {
+                                return match + " (*" + recolhidos[frota] + "*)";
+                            }
+                            return match;
+                        });
                     }
 
                     let obsFinalText = obsCustom ? "\n\n*OBS:*\n" + obsCustom : "";
