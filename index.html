@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V136 (Estética Final) 💎</title>
+    <title>Checklist Tratos - V138 (O Radar Perfeito) 📡</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -622,7 +622,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura da Estética Final V136... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura do Radar Perfeito V138... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -705,11 +705,20 @@
                         for (let i = 0; i < Math.min(30, rows.length); i++) if (rows[i]) textScan += rows[i].join(" ").toUpperCase() + " ";
                         
                         let unit = "VER";
-                        if (safeIncludes(textScan, "MANDU") || safeIncludes(textScan, "MAN -") || safeIncludes(textScan, "UIM")) unit = "MAN";
-                        else if (safeIncludes(textScan, "SÃO JOSÉ") || safeIncludes(textScan, "SJO -") || safeIncludes(textScan, "UISJ")) unit = "SJO";
-                        else if (safeIncludes(textScan, "ANDRADE") || safeIncludes(textScan, "AND -") || safeIncludes(textScan, "UIA")) unit = "AND";
-                        else if (safeIncludes(textScan, "CRZ") || safeIncludes(textScan, "CRUZ ALTA") || safeIncludes(textScan, "UICA")) unit = "CRZ";
-                        else if (safeIncludes(textScan, "TANABI") || safeIncludes(textScan, "TAN -") || safeIncludes(textScan, "UIT")) unit = "TAN";
+                        let fn = file.name.toUpperCase();
+                        
+                        // O RADAR PERFEITO (Lê o nome do arquivo para não ter confusão com palavras parecidas)
+                        if (fn.includes("UISJ") || fn.includes("SÃO JOSÉ") || fn.includes("SAO JOSE") || safeIncludes(textScan, "UISJ") || safeIncludes(textScan, "SÃO JOSÉ") || safeIncludes(textScan, "SAO JOSE")) {
+                            unit = "SJO";
+                        } else if (fn.includes("UICA") || fn.includes("CRUZ ALTA") || fn.includes("CRZ") || safeIncludes(textScan, "UICA") || safeIncludes(textScan, "CRUZ ALTA") || safeIncludes(textScan, "CRZ -")) {
+                            unit = "CRZ";
+                        } else if (fn.includes("UIM") || fn.includes("MANDU") || fn.includes("MAN -") || safeIncludes(textScan, "UIM") || safeIncludes(textScan, "MANDU") || safeIncludes(textScan, "MAN -")) {
+                            unit = "MAN";
+                        } else if (fn.includes("UIA") || fn.includes("ANDRADE") || safeIncludes(textScan, "UIA") || safeIncludes(textScan, "ANDRADE") || safeIncludes(textScan, "AND -")) {
+                            unit = "AND";
+                        } else if (fn.includes("UIT") || fn.includes("TANABI") || safeIncludes(textScan, "UIT") || safeIncludes(textScan, "TANABI") || safeIncludes(textScan, "TAN -")) {
+                            unit = "TAN";
+                        }
 
                         for (let r = 0; r < rows.length; r++) {
                             if (!rows[r]) continue;
@@ -944,7 +953,6 @@
                                             isActive = false; 
                                         }
 
-                                        // FIX 136: Mantido SEM parênteses para Mudança e Paradas (conforme o seu pedido).
                                         if (isMudancaStatus) {
                                             let txtMud = finalReason ? finalReason.replace("VENTO FORTE","EXCESSO DE VENTO") : "MUDANÇA DE FRENTE";
                                             curBlk.acts.push("🟡 " + frota + textoImplemento + " - " + txtMud);
@@ -1065,8 +1073,7 @@
                                 if (safeIncludes(f.name, "HERBICIDA")) {
                                     let frotaPura = a.replace('✅ ', '').replace('✅', '').replace('🟡 ', '').replace('🟡', '').split(' - ')[0].trim();
                                     let r = await askHerbicidaType(frotaPura);
-                                    // AQUI: Tirei os parênteses do Herbicida a seu pedido!
-                                    if(r) it += " - " + r; 
+                                    if(r) it += " - " + r;
                                 }
                                 txt += it + "\n";
                             }
@@ -1085,7 +1092,6 @@
                     let obsCustom = await askObsForm();
                     let recolhidos = await askRecolhidosForm(); 
                     
-                    // Parênteses MANTIDOS apenas no Automotiva/Recolhidos
                     for (let frota in recolhidos) {
                         let regex = new RegExp("^((?:✅ |🟡 |)?\\d{4,6}\\b.*)$", "gm");
                         txt = txt.replace(regex, (match) => {
