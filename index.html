@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V138 (O Radar Perfeito) 📡</title>
+    <title>Checklist Tratos - V141 (Sniper de Fotos) 🎯</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -106,10 +106,12 @@
 
         #blocoDicionario { display: none; width: 100%; margin-bottom: 20px; }
         .galeria-titulo { font-size: 14px; color: #ff9800; text-align: center; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #4a4a6a; padding-bottom: 5px; }
-        .categorias-container { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
-        .btn-cat { flex: 1; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .categorias-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; width: 100%; }
+        .btn-cat { flex: 1 1 45%; padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         #btnCatTratos { background: linear-gradient(135deg, #ff9800, #e65100); }
         #btnCatCtt { background: linear-gradient(135deg, #2196F3, #1565C0); }
+        #btnCatPreparo { background: linear-gradient(135deg, #8D6E63, #5D4037); }
+        #btnCatPlantio { background: linear-gradient(135deg, #66BB6A, #2E7D32); }
         
         .galeria-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid #4a4a6a; }
         .btn-dic { background: rgba(255, 255, 255, 0.1); border: 1px solid #00ffcc; color: #00ffcc; padding: 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.3s; text-align: center; }
@@ -144,6 +146,8 @@
         <div class="galeria-titulo">📖 Dicionário de Operações</div>
         <div class="categorias-container">
             <button id="btnCatTratos" class="btn-cat" onclick="renderizarGaleria('tratos')">🚜 TRATOS</button>
+            <button id="btnCatPreparo" class="btn-cat" onclick="renderizarGaleria('preparo')">🏜️ PREPARO</button>
+            <button id="btnCatPlantio" class="btn-cat" onclick="renderizarGaleria('plantio')">🌱 PLANTIO</button>
             <button id="btnCatCtt" class="btn-cat" onclick="renderizarGaleria('ctt')">🚛 CTT</button>
         </div>
         <div class="galeria-grid" id="gridDicionario"></div>
@@ -181,12 +185,13 @@
         return String(target).toUpperCase().includes(s);
     }
 
+    // 📖 DICIONÁRIO ATUALIZADO E BLINDADO
     const dictInfo = {
         "TRATOS": { titulo: "Tratos Culturais", desc: "Conjunto de práticas e cuidados agrícolas." },
         "VINHACA_LOC": { titulo: "Vinhaça Localizada", desc: "Aplicação direcionada de vinhaça." },
         "LOMBO": { titulo: "Q/Lombo", desc: "Operação de nivelamento do solo." },
         "MINERAL": { titulo: "Cultivo Mineral", desc: "Aplicação de fertilizantes sintéticos/minerais." },
-        "SOQUEIRA": { titulo: "Corte Soqueira", desc: "Operação que corta o solo e as raízes da cana." },
+        "CORTESOQUEIRA": { titulo: "Corte Soqueira", desc: "Operação que corta o solo e as raízes da cana." }, // MUDADO PARA NÃO CONFUNDIR COM ELIMINADOR
         "COMPOSTO": { titulo: "Composto", desc: "Aplicação de adubo orgânico." },
         "UNIPORT": { titulo: "Herbicida Uniport", desc: "Pulverizador Autopropelido Uniport." },
         "HERBPLUS": { titulo: "Herbicida Herbplus", desc: "Implemento tratorizado Herbplus." },
@@ -194,15 +199,31 @@
         "CANAL": { titulo: "Vinhaça Canal", desc: "Sistema de canais para conduzir a vinhaça." },
         "BOMBA": { titulo: "Moto Bomba", desc: "Equipamento de bombeamento." },
         "ROLL": { titulo: "Hidro Roll", desc: "Carretel enrolador móvel." },
+        
         "CTT": { titulo: "Módulo CTT", desc: "Corte, Transbordo e Transporte." },
         "COLHEDORA": { titulo: "Colhedora", desc: "Máquina responsável pela etapa do corte." },
         "TRANSBORDO": { titulo: "Transbordo", desc: "Trator tracionando caixas basculantes." },
-        "TRANSPORTE": { titulo: "Transporte de Cana", desc: "Caminhões pesados de frete." }
+        "TRANSPORTE": { titulo: "Transporte de Cana", desc: "Caminhões pesados de frete." },
+
+        "PREPARO": { titulo: "Preparo de Solo", desc: "É a fase de infraestrutura. O objetivo é transformar um terreno bruto ou compactado em um ambiente ideal para a planta crescer." },
+        "SUBSOLAGEM": { titulo: "Subsolagem", desc: "Rompe camadas profundas e compactadas do solo." },
+        "GRADAGEM": { titulo: "Gradagem", desc: "Desfaz torrões e nivela a superfície." },
+        "CANTERIZACAO": { titulo: "Canterização", desc: "Cria canteiros elevados para o plantio." },
+        "SULCADOR": { titulo: "Sulcador", desc: "Abre os sulcos onde será depositada a semente ou muda." },
+        "ELIMINADOR": { titulo: "Eliminador de Soqueira", desc: "Destrói a base da planta antiga para renovar a área." },
+
+        "PLANTIO": { titulo: "Plantio", desc: "É a fase de implantação da cultura. No caso da cana, não se usam sementes comuns, mas pedaços do caule (rebolos) ou mudas pré-brotadas." },
+        "COLHEDORA_MUDA": { titulo: "Colhedora de Muda", desc: "Colhe o material que será usado para o novo plantio." },
+        "PLANTADORA": { titulo: "Plantadora", desc: "Abre o sulco, deposita a muda/insumo e fecha a terra." },
+        "TRANSBORDO_MUDA": { titulo: "Transbordo (Plantio)", desc: "Recebe a carga da colhedora e leva até o rodo muda." },
+        "RODO_MUDA": { titulo: "Rodo Muda", desc: "Transporta as mudas de forma protegida até as plantadoras." }
     };
 
     const categoriasMenu = {
-        tratos: ["TRATOS", "VINHACA_LOC", "LOMBO", "MINERAL", "SOQUEIRA", "COMPOSTO", "UNIPORT", "HERBPLUS", "CORRETIVO", "CANAL", "BOMBA", "ROLL"],
-        ctt: ["CTT", "COLHEDORA", "TRANSBORDO", "TRANSPORTE"]
+        tratos: ["TRATOS", "VINHACA_LOC", "LOMBO", "MINERAL", "CORTESOQUEIRA", "COMPOSTO", "UNIPORT", "HERBPLUS", "CORRETIVO", "CANAL", "BOMBA", "ROLL"],
+        ctt: ["CTT", "COLHEDORA", "TRANSBORDO", "TRANSPORTE"],
+        preparo: ["PREPARO", "SUBSOLAGEM", "GRADAGEM", "CANTERIZACAO", "SULCADOR", "ELIMINADOR"],
+        plantio: ["PLANTIO", "COLHEDORA_MUDA", "TRANSBORDO_MUDA", "PLANTADORA", "RODO_MUDA"]
     };
 
     let fotos = {}; 
@@ -237,7 +258,7 @@
         const descEl = document.getElementById('viewerDesc');
         const btnInfo = document.getElementById('btnInfo');
 
-        if (key === 'TRATOS' || key === 'CTT') {
+        if (key === 'TRATOS' || key === 'CTT' || key === 'PREPARO' || key === 'PLANTIO') {
             descEl.style.display = 'block'; 
             imgEl.style.display = 'none'; 
             btnInfo.style.display = 'none';
@@ -525,6 +546,7 @@
                 const url = URL.createObjectURL(await zip.file("xl/media/" + imgPath).async("blob"));
                 
                 for (let key in dictInfo) {
+                    // CÓDIGO SNIPER: Agora ele só puxa a imagem se bater o nome com perfeição cirúrgica!
                     if (safeIncludes(normName, normalizeStr(dictInfo[key].titulo)) || safeIncludes(normName, key)) {
                         fotos[key] = url;
                     }
@@ -622,7 +644,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura do Radar Perfeito V138... 🚀";
+        document.getElementById('resultado').innerText = "Iniciando Varredura do Sniper de Fotos V141... 🚀";
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -642,7 +664,7 @@
                     let frentesTurno = new Set();
                     let frentesChuva = new Set();
 
-                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA"];
+                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA", "ELIMINADOR"];
                     const now = new Date();
 
                     let pMap = {};
@@ -707,7 +729,6 @@
                         let unit = "VER";
                         let fn = file.name.toUpperCase();
                         
-                        // O RADAR PERFEITO (Lê o nome do arquivo para não ter confusão com palavras parecidas)
                         if (fn.includes("UISJ") || fn.includes("SÃO JOSÉ") || fn.includes("SAO JOSE") || safeIncludes(textScan, "UISJ") || safeIncludes(textScan, "SÃO JOSÉ") || safeIncludes(textScan, "SAO JOSE")) {
                             unit = "SJO";
                         } else if (fn.includes("UICA") || fn.includes("CRUZ ALTA") || fn.includes("CRZ") || safeIncludes(textScan, "UICA") || safeIncludes(textScan, "CRUZ ALTA") || safeIncludes(textScan, "CRZ -")) {
@@ -796,11 +817,13 @@
                                         if (m && m[1]) numFrente = m[1];
                                     }
 
+                                    // A REGRA DA MENSAGEM ANTERIOR INTACTA (Separa Eliminador de Soqueira)
                                     let nameRaw = safeIncludes(cell, "HERBICIDA") ? "HERBICIDA - " + numFrente : 
                                                   safeIncludes(cell, "CULTIVO MINERAL") ? "CULTIVO MINERAL" : 
                                                   (safeIncludes(cell, "CULTIVO") || safeIncludes(cell, "QUEBRA LOMBO")) ? "CULTIVO / Q LOMBO" : 
                                                   safeIncludes(cell, "COMPOSTO") ? cell : 
                                                   safeIncludes(cell, "TRANSP") ? "TRANSP DE VINHAÇA" : 
+                                                  safeIncludes(cell, "ELIMINADOR") ? "ELIMINADOR DE SOQUEIRA" : 
                                                   safeIncludes(cell, "SOQUEIRA") ? "CORTE SOQUEIRA" : cell;
                                                   
                                     let name = unit + " - " + nameRaw;
@@ -1010,7 +1033,7 @@
                         }
                     }
 
-                    const order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "CORTE SOQUEIRA", "SOQUEIRA", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA"];
+                    const order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "CORTE SOQUEIRA", "ELIMINADOR DE SOQUEIRA", "SOQUEIRA", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA"];
                     let sorted = Object.values(fData).sort((a,b) => {
                         let iA = order.findIndex(p => safeIncludes(a.name, p));
                         let iB = order.findIndex(p => safeIncludes(b.name, p));
