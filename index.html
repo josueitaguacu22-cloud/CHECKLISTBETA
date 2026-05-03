@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos - V141 (Sniper de Fotos) 🎯</title>
+    <title>Checklist Tratos & Plantio - V147 (Herbicida Limpo) 🚜</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -76,9 +76,7 @@
 
         .btn-gerar { 
             background: linear-gradient(135deg, #4CAF50, #2E7D32); 
-            width: 100%; 
-            font-size: 18px; 
-            margin-bottom: 15px; 
+            font-size: 16px; 
             color: white; 
             border: none; 
             padding: 15px; 
@@ -86,7 +84,14 @@
             cursor: pointer; 
             font-weight: bold; 
             box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); 
+            transition: 0.3s;
         }
+        .btn-plantio {
+            background: linear-gradient(135deg, #8D6E63, #5D4037);
+            box-shadow: 0 4px 10px rgba(141, 110, 99, 0.3); 
+        }
+        .btn-gerar:hover { opacity: 0.9; transform: translateY(-2px); }
+
         .botoes-acao { 
             display: flex; 
             gap: 10px; 
@@ -140,7 +145,7 @@
 <div class="backdrop-fundo"></div>
 
 <div class="container">
-    <h2>Checklist Tratos</h2>
+    <h2>Central de Checklists</h2>
     
     <div id="blocoDicionario">
         <div class="galeria-titulo">📖 Dicionário de Operações</div>
@@ -154,7 +159,11 @@
     </div>
 
     <input type="file" id="fileUpload" accept=".xlsx, .xls, .xlsm" />
-    <button class="btn-gerar" onclick="processarPlanilha()">GERAR CHECKLIST</button>
+    
+    <div style="display:flex; gap:10px; margin-bottom: 15px; width: 100%;">
+        <button class="btn-gerar" style="flex:1;" onclick="processarPlanilha('tratos')">🚜 GERAR TRATOS</button>
+        <button class="btn-gerar btn-plantio" style="flex:1;" onclick="processarPlanilha('plantio')">🌱 GERAR PLANTIO</button>
+    </div>
     
     <div class="botoes-acao">
         <button class="btn-wpp" onclick="copiarWhatsApp()">Copiar WhatsApp</button>
@@ -185,13 +194,22 @@
         return String(target).toUpperCase().includes(s);
     }
 
-    // 📖 DICIONÁRIO ATUALIZADO E BLINDADO
+    function needsPrevisao(reason) {
+        const triggers = [
+            "ABASTECIMENTO", "LUBRIFICA", "ACIDENTE", "FALHA OPERACIONAL", "AGUARDANDO COMBOIO", 
+            "AGUARDANDO MANUTEN", "BORRACHARIA", "IMPLEMENTO QUEBRADO", "CONCESSIONARIA", "GARANTIA", 
+            "CORRETIVA", "ELETRICA", "ELÉTRICA", "PREVENTIVA", "SOLINFTEC", "REGENERA"
+        ];
+        let r = String(reason).toUpperCase();
+        return triggers.some(t => r.includes(t));
+    }
+
     const dictInfo = {
         "TRATOS": { titulo: "Tratos Culturais", desc: "Conjunto de práticas e cuidados agrícolas." },
         "VINHACA_LOC": { titulo: "Vinhaça Localizada", desc: "Aplicação direcionada de vinhaça." },
         "LOMBO": { titulo: "Q/Lombo", desc: "Operação de nivelamento do solo." },
         "MINERAL": { titulo: "Cultivo Mineral", desc: "Aplicação de fertilizantes sintéticos/minerais." },
-        "CORTESOQUEIRA": { titulo: "Corte Soqueira", desc: "Operação que corta o solo e as raízes da cana." }, // MUDADO PARA NÃO CONFUNDIR COM ELIMINADOR
+        "CORTESOQUEIRA": { titulo: "Corte Soqueira", desc: "Operação que corta o solo e as raízes da cana." }, 
         "COMPOSTO": { titulo: "Composto", desc: "Aplicação de adubo orgânico." },
         "UNIPORT": { titulo: "Herbicida Uniport", desc: "Pulverizador Autopropelido Uniport." },
         "HERBPLUS": { titulo: "Herbicida Herbplus", desc: "Implemento tratorizado Herbplus." },
@@ -213,17 +231,17 @@
         "ELIMINADOR": { titulo: "Eliminador de Soqueira", desc: "Destrói a base da planta antiga para renovar a área." },
 
         "PLANTIO": { titulo: "Plantio", desc: "É a fase de implantação da cultura. No caso da cana, não se usam sementes comuns, mas pedaços do caule (rebolos) ou mudas pré-brotadas." },
-        "COLHEDORA_MUDA": { titulo: "Colhedora de Muda", desc: "Colhe o material que será usado para o novo plantio." },
+        "COLHEDORADEMUDA": { titulo: "Colhedora de Muda", desc: "Colhe o material que será usado para o novo plantio." },
         "PLANTADORA": { titulo: "Plantadora", desc: "Abre o sulco, deposita a muda/insumo e fecha a terra." },
-        "TRANSBORDO_MUDA": { titulo: "Transbordo (Plantio)", desc: "Recebe a carga da colhedora e leva até o rodo muda." },
-        "RODO_MUDA": { titulo: "Rodo Muda", desc: "Transporta as mudas de forma protegida até as plantadoras." }
+        "TRANSBORDOPLANTIO": { titulo: "Transbordo (Plantio)", desc: "Recebe a carga da colhedora e leva até o rodo muda." },
+        "RODOMUDA": { titulo: "Rodo Muda", desc: "Transporta as mudas de forma protegida até as plantadoras." }
     };
 
     const categoriasMenu = {
         tratos: ["TRATOS", "VINHACA_LOC", "LOMBO", "MINERAL", "CORTESOQUEIRA", "COMPOSTO", "UNIPORT", "HERBPLUS", "CORRETIVO", "CANAL", "BOMBA", "ROLL"],
         ctt: ["CTT", "COLHEDORA", "TRANSBORDO", "TRANSPORTE"],
         preparo: ["PREPARO", "SUBSOLAGEM", "GRADAGEM", "CANTERIZACAO", "SULCADOR", "ELIMINADOR"],
-        plantio: ["PLANTIO", "COLHEDORA_MUDA", "TRANSBORDO_MUDA", "PLANTADORA", "RODO_MUDA"]
+        plantio: ["PLANTIO", "COLHEDORADEMUDA", "TRANSBORDOPLANTIO", "PLANTADORA", "RODOMUDA"]
     };
 
     let fotos = {}; 
@@ -275,17 +293,10 @@
         document.getElementById('modalViewer').style.display = 'flex';
     }
 
-    function fecharFoto() { 
-        document.getElementById('modalViewer').style.display = 'none'; 
-    }
-    
+    function fecharFoto() { document.getElementById('modalViewer').style.display = 'none'; }
     function toggleInfo() {
         const desc = document.getElementById('viewerDesc');
-        if (desc.style.display === 'none') {
-            desc.style.display = 'block';
-        } else {
-            desc.style.display = 'none';
-        }
+        if (desc.style.display === 'none') { desc.style.display = 'block'; } else { desc.style.display = 'none'; }
     }
 
     async function askHerbicidaType(machineId) {
@@ -306,14 +317,87 @@
             `;
             document.body.appendChild(div);
             
-            const close = (res) => { 
-                document.body.removeChild(div); 
-                resolve(res); 
-            };
+            const close = (res) => { document.body.removeChild(div); resolve(res); };
             
             document.getElementById('btnUni').onclick = () => close("UNIPORT");
             document.getElementById('btnHerb').onclick = () => close("HERBPLUS");
             document.getElementById('btnManual').onclick = () => close(document.getElementById('manualInp').value.trim());
+        });
+    }
+
+    async function askPrevisaoList(paradasArray) {
+        if (!paradasArray || paradasArray.length === 0) return {};
+        
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:9999;";
+
+            let listHTML = "";
+            paradasArray.forEach((p, index) => {
+                listHTML += `
+                    <div style="background:#1e1e2f;padding:15px;border-radius:8px;margin-bottom:15px;border:1px solid #4a4a6a;text-align:left;" class="prev-item" data-frota="${p.frota}">
+                        <p style="margin:0 0 10px 0;font-weight:bold;color:#ff9800;font-size:14px;">${p.frota} - ${p.motivo}</p>
+                        
+                        <div style="display:flex;gap:5px;margin-bottom:10px;">
+                            <button type="button" class="btn-prev-num" data-val="1°" style="flex:1;padding:8px 0;background:#2196F3;color:#fff;border:1px solid #2196F3;border-radius:4px;cursor:pointer;font-weight:bold;">1°</button>
+                            <button type="button" class="btn-prev-num" data-val="2°" style="flex:1;padding:8px 0;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;border-radius:4px;cursor:pointer;font-weight:bold;">2°</button>
+                            <button type="button" class="btn-prev-num" data-val="3°" style="flex:1;padding:8px 0;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;border-radius:4px;cursor:pointer;font-weight:bold;">3°</button>
+                            <button type="button" class="btn-prev-num" data-val="4°" style="flex:1;padding:8px 0;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;border-radius:4px;cursor:pointer;font-weight:bold;">4°</button>
+                        </div>
+                        
+                        <div style="display:flex;gap:10px;">
+                            <input type="date" class="inp-data" style="flex:1;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                            <input type="time" class="inp-hora" style="flex:1;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                        </div>
+                        <input type="hidden" class="inp-num" value="1°">
+                    </div>
+                `;
+            });
+
+            overlay.innerHTML = `
+                <div style="background:#2a2a40;padding:25px;border-radius:10px;width:95%;max-width:500px;max-height:90vh;overflow-y:auto;border:1px solid #ff9800;text-align:center;">
+                    <h3 style="color:#ff9800;margin-top:0;">PREVISÃO DE MANUTENÇÃO</h3>
+                    <p style="font-size:13px; color:#ccc; margin-top:-10px; margin-bottom:20px;">Informe a previsão para as frotas em manutenção.</p>
+                    
+                    ${listHTML}
+                    
+                    <button id="btnSavePrev" style="background:#4CAF50;color:#fff;padding:15px;width:100%;border-radius:5px;border:none;cursor:pointer;font-weight:bold;margin-top:10px;">💾 CONFIRMAR PREVISÕES</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const items = overlay.querySelectorAll('.prev-item');
+            items.forEach(item => {
+                const btns = item.querySelectorAll('.btn-prev-num');
+                const inpNum = item.querySelector('.inp-num');
+                
+                btns.forEach(b => {
+                    b.onclick = () => {
+                        btns.forEach(btn => { btn.style.background = '#2a2a40'; btn.style.borderColor = '#4a4a6a'; });
+                        b.style.background = '#2196F3';
+                        b.style.borderColor = '#2196F3';
+                        inpNum.value = b.getAttribute('data-val');
+                    };
+                });
+            });
+
+            document.getElementById('btnSavePrev').onclick = () => {
+                const results = {};
+                items.forEach(item => {
+                    const frota = item.getAttribute('data-frota');
+                    const num = item.querySelector('.inp-num').value;
+                    const d = item.querySelector('.inp-data').value;
+                    const h = item.querySelector('.inp-hora').value;
+                    
+                    if (d && h) {
+                        const [yyyy, mm, dd] = d.split('-');
+                        results[frota] = `${num} PREV. ${dd}/${mm} ${h}`;
+                    }
+                });
+                
+                document.body.removeChild(overlay);
+                resolve(results);
+            };
         });
     }
 
@@ -366,10 +450,7 @@
 
             document.getElementById('btnAdd').onclick = addRow;
             
-            document.getElementById('btnSkip').onclick = () => { 
-                document.body.removeChild(overlay); 
-                resolve([]); 
-            };
+            document.getElementById('btnSkip').onclick = () => { document.body.removeChild(overlay); resolve([]); };
             
             document.getElementById('btnSave').onclick = () => {
                 const results = [];
@@ -409,11 +490,7 @@
             `;
             document.body.appendChild(overlay);
 
-            document.getElementById('btnSkipObs').onclick = () => { 
-                document.body.removeChild(overlay); 
-                resolve(""); 
-            };
-            
+            document.getElementById('btnSkipObs').onclick = () => { document.body.removeChild(overlay); resolve(""); };
             document.getElementById('btnSaveObs').onclick = () => {
                 const val = document.getElementById('obsText').value.trim();
                 document.body.removeChild(overlay);
@@ -482,11 +559,7 @@
             addRow();
 
             document.getElementById('btnAddRec').onclick = addRow;
-            
-            document.getElementById('btnSkipRec').onclick = () => { 
-                document.body.removeChild(overlay); 
-                resolve({}); 
-            };
+            document.getElementById('btnSkipRec').onclick = () => { document.body.removeChild(overlay); resolve({}); };
             
             document.getElementById('btnSaveRec').onclick = () => {
                 const results = {};
@@ -513,40 +586,29 @@
             const zip = await JSZip.loadAsync(file);
             const wbXml = await zip.file("xl/workbook.xml").async("text");
             const sMatch = wbXml.match(/<sheet [^>]*name="CONFIG"[^>]*sheetId="(\d+)"[^>]*r:id="(rId\d+)"/i);
-            
             if (!sMatch) return;
-            
             const wbRels = await zip.file("xl/_rels/workbook.xml.rels").async("text");
             const relTarget = wbRels.match(new RegExp(`Id="${sMatch[2]}"[^>]*Target="([^"]+)"`))[1];
-            
             const sRelsPath = "xl/" + relTarget.replace("worksheets/", "worksheets/_rels/") + ".rels";
             const sRelsXml = await zip.file(sRelsPath).async("text");
-            
             const dMatch = sRelsXml.match(/Target="..\/drawings\/([^"]+)"/);
             if (!dMatch) return;
-            
             const dPath = "xl/drawings/" + dMatch[1];
             const dRelsPath = "xl/drawings/_rels/" + dMatch[1] + ".rels";
-            
             const dXml = await zip.file(dPath).async("text");
             const dRelsXml = await zip.file(dRelsPath).async("text");
-            
             const xmlDoc = new DOMParser().parseFromString(dXml, "text/xml");
             const pics = xmlDoc.getElementsByTagName("xdr:pic");
             
             for (let pic of pics) {
                 const nameNode = pic.getElementsByTagName("xdr:cNvPr")[0];
                 if (!nameNode) continue;
-                
                 const rawName = nameNode.getAttribute("name");
                 const normName = normalizeStr(rawName);
                 const rId = pic.getElementsByTagName("a:blip")[0].getAttribute("r:embed");
-                
                 const imgPath = dRelsXml.match(new RegExp(`Id="${rId}"[^>]*Target="..\/media\/([^"]+)"`))[1];
                 const url = URL.createObjectURL(await zip.file("xl/media/" + imgPath).async("blob"));
-                
                 for (let key in dictInfo) {
-                    // CÓDIGO SNIPER: Agora ele só puxa a imagem se bater o nome com perfeição cirúrgica!
                     if (safeIncludes(normName, normalizeStr(dictInfo[key].titulo)) || safeIncludes(normName, key)) {
                         fotos[key] = url;
                     }
@@ -564,14 +626,12 @@
 
         if (typeof val === 'number') {
             if (val > 1 && (val < 44900 || val > 48000)) return null; 
-            
             let baseDate = new Date();
             if (val >= 44900 && val <= 48000) {
                 let utc_days  = Math.floor(val - 25569);
                 let date_info = new Date(utc_days * 86400 * 1000);
                 baseDate = new Date(date_info.getUTCFullYear(), date_info.getUTCMonth(), date_info.getUTCDate());
             }
-            
             let fraction = val - Math.floor(val);
             if (fraction > 0.00001) {
                 let total_seconds = Math.round(fraction * 86400);
@@ -580,23 +640,19 @@
                 baseDate.setHours(0, 0, 0, 0);
             }
             obj = baseDate;
-            
         } else {
             let s = String(val).replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
             if (s.split('.').length > 2) return null; 
-            
             let dateMatch = s.match(/(?:^|\s)(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
             let timeMatch = s.match(/(?:^|\s)(\d{1,2})[:hH](\d{2})/);
 
             if (!dateMatch && !timeMatch) return null;
-            
             let now = new Date();
             let yr = now.getFullYear();
             let mo = now.getMonth();
             let dy = now.getDate();
             let hr = 0;
             let mi = 0;
-            
             if (dateMatch) {
                 dy = parseInt(dateMatch[1], 10);
                 mo = parseInt(dateMatch[2], 10) - 1;
@@ -604,12 +660,10 @@
                 if (yr < 100) yr += 2000;
                 if (yr < 2023 || yr > 2030) return null; 
             }
-            
             if (timeMatch) {
                 hr = parseInt(timeMatch[1], 10);
                 mi = parseInt(timeMatch[2], 10);
             }
-
             if (dateMatch && timeMatch) {
                 obj = new Date(yr, mo, dy, hr, mi);
             } else if (dateMatch) {
@@ -626,25 +680,23 @@
             let y = obj.getFullYear().toString().slice(-2);
             let h = obj.getHours().toString().padStart(2, '0');
             let min = obj.getMinutes().toString().padStart(2, '0');
-            
             if (val > 1 || safeIncludes(String(val), '/')) {
                 str = d + '/' + m + '/' + y + ' ' + h + ':' + min;
             } else {
                 str = h + ':' + min;
             }
-            
             return { obj: obj, str: str };
         }
         return null;
     }
 
-    function processarPlanilha() {
+    function processarPlanilha(modo = 'tratos') {
         const fileUpload = document.getElementById('fileUpload');
         if (!fileUpload.files[0]) return alert("Selecione a planilha!");
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = "Iniciando Varredura do Sniper de Fotos V141... 🚀";
+        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V147... 🚀`;
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -664,7 +716,7 @@
                     let frentesTurno = new Set();
                     let frentesChuva = new Set();
 
-                    const keywords = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA", "ELIMINADOR"];
+                    const keywordsTratos = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA", "ELIMINADOR"];
                     const now = new Date();
 
                     let pMap = {};
@@ -700,7 +752,7 @@
                                         if (p) {
                                             if (!dStr) {
                                                 dStr = p.str; 
-                                            } else if (!safeIncludes(dStr, '/') && safeIncludes(p.str, '/')) {
+                                            } else if (!safeIncludes(dStr, '/')) {
                                                 dStr = p.str;
                                             }
                                         } else {
@@ -747,8 +799,36 @@
                             for (let c = 0; c < rows[r].length; c++) {
                                 let cell = String(rows[r][c]).toUpperCase().trim();
                                 
-                                if (keywords.some(k => safeIncludes(cell, k))) {
-                                    
+                                let isFrontMatch = false;
+                                let nameRaw = cell;
+
+                                if (modo === 'tratos') {
+                                    if (keywordsTratos.some(k => safeIncludes(cell, k))) {
+                                        isFrontMatch = true;
+                                        
+                                        let numFrente = "1"; 
+                                        if (safeIncludes(cell, "HERBICIDA")) {
+                                            let txtFrente = (String(rows[r][c] || "") + " " + String(rows[r][c+1] || "")).toUpperCase();
+                                            let m = txtFrente.match(/HERBICIDA\s*[\-\:]?\s*(\d+)/);
+                                            if (m && m[1]) numFrente = m[1];
+                                        }
+
+                                        nameRaw = safeIncludes(cell, "HERBICIDA") ? "HERBICIDA - " + numFrente : 
+                                                  safeIncludes(cell, "CULTIVO MINERAL") ? "CULTIVO MINERAL" : 
+                                                  (safeIncludes(cell, "CULTIVO") || safeIncludes(cell, "QUEBRA LOMBO")) ? "CULTIVO / Q LOMBO" : 
+                                                  safeIncludes(cell, "COMPOSTO") ? cell : 
+                                                  safeIncludes(cell, "TRANSP") ? "TRANSP DE VINHAÇA" : 
+                                                  safeIncludes(cell, "ELIMINADOR") ? "ELIMINADOR DE SOQUEIRA" : 
+                                                  safeIncludes(cell, "SOQUEIRA") ? "CORTE SOQUEIRA" : cell;
+                                    }
+                                } else if (modo === 'plantio') {
+                                    if (rows[r+1] && String(rows[r+1][c]).toUpperCase().trim() === "BLOCO" && cell !== "" && cell !== "O.S." && cell !== "O.S" && cell !== "OS") {
+                                        isFrontMatch = true;
+                                        nameRaw = cell; 
+                                    }
+                                }
+                                
+                                if (isFrontMatch) {
                                     let isOfc = safeIncludes(cell, "OFICINA") || safeIncludes(cell, "OFC");
                                     if (isOfc) continue; 
                                     
@@ -810,22 +890,6 @@
                                         }
                                     }
                                     
-                                    let numFrente = "1"; 
-                                    if (safeIncludes(cell, "HERBICIDA")) {
-                                        let txtFrente = (String(rows[r][c] || "") + " " + String(rows[r][c+1] || "")).toUpperCase();
-                                        let m = txtFrente.match(/HERBICIDA\s*[\-\:]?\s*(\d+)/);
-                                        if (m && m[1]) numFrente = m[1];
-                                    }
-
-                                    // A REGRA DA MENSAGEM ANTERIOR INTACTA (Separa Eliminador de Soqueira)
-                                    let nameRaw = safeIncludes(cell, "HERBICIDA") ? "HERBICIDA - " + numFrente : 
-                                                  safeIncludes(cell, "CULTIVO MINERAL") ? "CULTIVO MINERAL" : 
-                                                  (safeIncludes(cell, "CULTIVO") || safeIncludes(cell, "QUEBRA LOMBO")) ? "CULTIVO / Q LOMBO" : 
-                                                  safeIncludes(cell, "COMPOSTO") ? cell : 
-                                                  safeIncludes(cell, "TRANSP") ? "TRANSP DE VINHAÇA" : 
-                                                  safeIncludes(cell, "ELIMINADOR") ? "ELIMINADOR DE SOQUEIRA" : 
-                                                  safeIncludes(cell, "SOQUEIRA") ? "CORTE SOQUEIRA" : cell;
-                                                  
                                     let name = unit + " - " + nameRaw;
 
                                     if (nameRaw.match(/^\d+/) || nameRaw === "0") {
@@ -917,18 +981,7 @@
                                         }
 
                                         let uComVal = cUCom !== -1 ? rowData[cUCom] : null;
-
-                                        let infoParada = "";
-                                        let reasonParada = "";
-                                        if (pMap[frota]) {
-                                            infoParada = pMap[frota].time ? " - " + pMap[frota].time : "";
-                                            reasonParada = pMap[frota].reason;
-                                        }
-                                        
-                                        if (!infoParada && uComVal) {
-                                            let pDate = parseSafeDate(uComVal);
-                                            if(pDate && safeIncludes(pDate.str, '/')) infoParada = " - " + pDate.str;
-                                        }
+                                        let reasonParada = pMap[frota] ? pMap[frota].reason : "";
                                         
                                         let isOffline = false;
                                         let lastConnText = "";
@@ -937,7 +990,6 @@
                                         if (parsed && parsed.obj) {
                                             let diffHrs = (now - parsed.obj) / 3600000;
                                             if (diffHrs < -12) diffHrs += 24; 
-                                            
                                             if (diffHrs >= 4) {
                                                 isOffline = true;
                                                 lastConnText = parsed.str;
@@ -959,6 +1011,16 @@
 
                                         let finalReason = stUpper;
                                         if (!finalReason || finalReason === "") finalReason = reasonParada;
+
+                                        if (finalReason) {
+                                            finalReason = finalReason.replace(/\s*[-]*\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\s+\d{1,2}:\d{2}(?::\d{2})?/g, "");
+                                            finalReason = finalReason.replace(/\s*[-]*\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/g, "");
+                                            finalReason = finalReason.replace(/\s*[-]*\s*\d{1,2}:\d{2}(?::\d{2})?/g, "");
+                                            finalReason = finalReason.trim();
+                                            if (finalReason.endsWith("-")) {
+                                                finalReason = finalReason.slice(0, -1).trim();
+                                            }
+                                        }
 
                                         let isMudancaStatus = safeIncludes(finalReason, "MUDANÇA") || safeIncludes(finalReason, "MUDANCA");
                                         let isActive = false;
@@ -983,7 +1045,12 @@
                                             curBlk.acts.push("✅ " + frota + textoImplemento); 
                                         } else {
                                             let txtStp = finalReason ? finalReason.replace("VENTO FORTE","EXCESSO DE VENTO") : "MOTIVO NÃO INFORMADO";
-                                            curBlk.stps.push(frota + textoImplemento + " - " + txtStp + infoParada);
+                                            curBlk.stps.push({ 
+                                                frotaPura: frota, 
+                                                textoImplemento: textoImplemento, 
+                                                txtStp: txtStp, 
+                                                precisaPrevisao: needsPrevisao(txtStp) 
+                                            });
                                         }
 
                                         dr++;
@@ -1001,7 +1068,6 @@
 
                     for (let key in fData) {
                         let f = fData[key];
-                        
                         let hasActive = false;
                         let hasMismatchedTurno = false;
                         let hasMismatchedChuva = false;
@@ -1011,7 +1077,7 @@
                             if (bl.acts.length > 0) hasActive = true;
                             totalStps += bl.stps.length;
                             for (let stp of bl.stps) {
-                                let stpUpper = stp.toUpperCase();
+                                let stpUpper = stp.txtStp.toUpperCase();
                                 
                                 let isTurnoStp = safeIncludes(stpUpper, "TURNO S. OPERA") || safeIncludes(stpUpper, "TURNO SEM OPERA") || safeIncludes(stpUpper, "TURNO S OPERA") || safeIncludes(stpUpper, "TURNO S. OPERAÇÃO");
                                 if (!isTurnoStp) hasMismatchedTurno = true;
@@ -1033,7 +1099,27 @@
                         }
                     }
 
-                    const order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "CORTE SOQUEIRA", "ELIMINADOR DE SOQUEIRA", "SOQUEIRA", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA"];
+                    let paradasParaPrevisao = [];
+                    for (let key in fData) {
+                        if (fData[key].skipPrint) continue;
+                        fData[key].blocks.forEach(bl => {
+                            bl.stps.forEach(stp => {
+                                if(stp.precisaPrevisao) {
+                                    paradasParaPrevisao.push({ frota: stp.frotaPura, motivo: stp.txtStp });
+                                }
+                            });
+                        });
+                    }
+
+                    let previsoesMap = await askPrevisaoList(paradasParaPrevisao);
+
+                    let order = [];
+                    if (modo === 'tratos') {
+                        order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "CORTE SOQUEIRA", "ELIMINADOR DE SOQUEIRA", "SOQUEIRA", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA"];
+                    } else {
+                        order = ["FTE", "COL MUDA", "TR MUDA", "TRANSP MUDA", "PLANTADORA", "SUBSOLAGEM", "GRADAGEM", "CANTERIZA", "SULCADOR", "ELIMINADOR"];
+                    }
+
                     let sorted = Object.values(fData).sort((a,b) => {
                         let iA = order.findIndex(p => safeIncludes(a.name, p));
                         let iB = order.findIndex(p => safeIncludes(b.name, p));
@@ -1041,17 +1127,15 @@
                         return a.name.localeCompare(b.name, undefined, {numeric:true});
                     });
 
-                    let txt = "*🚜 FRENTES TRATOS*\n";
+                    let txt = modo === 'tratos' ? "*🚜 FRENTES TRATOS*\n" : "*🌱 FRENTES PREPARO E PLANTIO*\n";
                     let topBoxes = [];
                     
                     if (frentesTurno.size > 0) {
                         topBoxes.push("🚫 *FRENTES PARADAS POR TURNO SEM OPERAÇÃO*\n" + Array.from(frentesTurno).join("\n"));
                     }
-                    
                     if (frentesChuva.size > 0) {
                         topBoxes.push("🌧️ *FRENTES PARADAS POR CHUVA / SOLO ÚMIDO*\n" + Array.from(frentesChuva).join("\n"));
                     }
-                    
                     if (topBoxes.length > 0) {
                         txt += "\n" + topBoxes.join("\n\n") + "\n\n\n";
                     } else {
@@ -1065,13 +1149,10 @@
                         f.blocks.sort((a,b) => b.acts.length - a.acts.length);
                         
                         for (let bl of f.blocks) {
-                            
                             let bVal = bl.b ? bl.b.toString().toUpperCase().trim() : "";
                             let isBlocoVazio = !bVal || bVal === "N/A" || bVal === "-" || bVal === "0" || bVal === "N" || bVal === "NA" || bVal === "O.S." || bVal === "OS" || safeIncludes(["SJO", "AND", "CRZ", "TAN", "MAN", "VER"], bVal);
-
                             let osVal = bl.os ? bl.os.toString().toUpperCase().trim() : "";
                             let isOsVazia = !osVal || osVal === "N/A" || safeIncludes(osVal, "N/A") || safeIncludes(osVal, "NA") || safeIncludes(osVal, "N / A") || osVal === "-" || osVal === "0" || osVal === "N";
-
                             let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal) && !isBlocoVazio; 
 
                             if (isBlocoVazio && isOsVazia) {
@@ -1093,17 +1174,21 @@
 
                             for (let a of bl.acts) {
                                 let it = a;
-                                if (safeIncludes(f.name, "HERBICIDA")) {
+                                if (modo === 'tratos' && safeIncludes(f.name, "HERBICIDA")) {
                                     let frotaPura = a.replace('✅ ', '').replace('✅', '').replace('🟡 ', '').replace('🟡', '').split(' - ')[0].trim();
                                     let r = await askHerbicidaType(frotaPura);
-                                    if(r) it += " - " + r;
+                                    // FIX 147: REMOVIDOS OS PARÊNTESES DO HERBICIDA
+                                    if(r) it += " - " + r; 
                                 }
                                 txt += it + "\n";
                             }
                             
                             if (bl.stps.length) { 
                                 txt += "*🚨 PARADAS*\n"; 
-                                bl.stps.forEach(s => txt += s + "\n"); 
+                                bl.stps.forEach(s => {
+                                    let prevText = previsoesMap[s.frotaPura] ? " - *" + previsoesMap[s.frotaPura] + "*" : "";
+                                    txt += s.frotaPura + s.textoImplemento + " - " + s.txtStp + prevText + "\n";
+                                }); 
                             }
                             txt += "\n";
                         }
@@ -1127,10 +1212,11 @@
 
                     let obsFinalText = obsCustom ? "\n\n*OBS:*\n" + obsCustom : "";
                     let conOutput = Object.keys(cMap).length > 0 ? Object.values(cMap).join("\n") : "N/A";
+                    let msgChamado = modo === 'tratos' ? "*CHAMADOS TECNOLOGIA: (geral para tratos)*" : "*CHAMADOS TECNOLOGIA: (geral para preparo e plantio)*";
 
                     document.getElementById('resultado').innerText = txt.trimEnd() + 
                     obsFinalText + 
-                    "\n---------------------------------------------------------------------------------------------------------------------------------\n\n*CHAMADOS TECNOLOGIA: (geral para tratos)*\n" + 
+                    "\n---------------------------------------------------------------------------------------------------------------------------------\n\n" + msgChamado + "\n" + 
                     (cham.length ? cham.join("\n") : "N/A") + 
                     "\n\n*CONECTIVIDADE: (equipamentos que estão sem enviar informação)*\n" + 
                     conOutput + 
