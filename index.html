@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos & Plantio - V147 (Herbicida Limpo) 🚜</title>
+    <title>Checklist Tratos & Plantio - V149 (O Radar Raio-X) 🩻</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -217,6 +217,7 @@
         "CANAL": { titulo: "Vinhaça Canal", desc: "Sistema de canais para conduzir a vinhaça." },
         "BOMBA": { titulo: "Moto Bomba", desc: "Equipamento de bombeamento." },
         "ROLL": { titulo: "Hidro Roll", desc: "Carretel enrolador móvel." },
+        "CALDA": { titulo: "Apoio Tratos", desc: "Apoio e abastecimento de calda." },
         
         "CTT": { titulo: "Módulo CTT", desc: "Corte, Transbordo e Transporte." },
         "COLHEDORA": { titulo: "Colhedora", desc: "Máquina responsável pela etapa do corte." },
@@ -238,7 +239,7 @@
     };
 
     const categoriasMenu = {
-        tratos: ["TRATOS", "VINHACA_LOC", "LOMBO", "MINERAL", "CORTESOQUEIRA", "COMPOSTO", "UNIPORT", "HERBPLUS", "CORRETIVO", "CANAL", "BOMBA", "ROLL"],
+        tratos: ["TRATOS", "VINHACA_LOC", "LOMBO", "MINERAL", "CORTESOQUEIRA", "COMPOSTO", "UNIPORT", "HERBPLUS", "CORRETIVO", "CANAL", "BOMBA", "ROLL", "CALDA"],
         ctt: ["CTT", "COLHEDORA", "TRANSBORDO", "TRANSPORTE"],
         preparo: ["PREPARO", "SUBSOLAGEM", "GRADAGEM", "CANTERIZACAO", "SULCADOR", "ELIMINADOR"],
         plantio: ["PLANTIO", "COLHEDORADEMUDA", "TRANSBORDOPLANTIO", "PLANTADORA", "RODOMUDA"]
@@ -696,7 +697,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V147... 🚀`;
+        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V149... 🚀`;
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -716,7 +717,8 @@
                     let frentesTurno = new Set();
                     let frentesChuva = new Set();
 
-                    const keywordsTratos = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA", "ELIMINADOR"];
+                    // V149: LÊ "APOIO" e "CALDA" no TRATOS
+                    const keywordsTratos = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA", "ELIMINADOR", "CALDA", "APOIO"];
                     const now = new Date();
 
                     let pMap = {};
@@ -752,7 +754,7 @@
                                         if (p) {
                                             if (!dStr) {
                                                 dStr = p.str; 
-                                            } else if (!safeIncludes(dStr, '/')) {
+                                            } else if (!safeIncludes(dStr, '/') && safeIncludes(p.str, '/')) {
                                                 dStr = p.str;
                                             }
                                         } else {
@@ -819,7 +821,8 @@
                                                   safeIncludes(cell, "COMPOSTO") ? cell : 
                                                   safeIncludes(cell, "TRANSP") ? "TRANSP DE VINHAÇA" : 
                                                   safeIncludes(cell, "ELIMINADOR") ? "ELIMINADOR DE SOQUEIRA" : 
-                                                  safeIncludes(cell, "SOQUEIRA") ? "CORTE SOQUEIRA" : cell;
+                                                  safeIncludes(cell, "SOQUEIRA") ? "CORTE SOQUEIRA" : 
+                                                  (safeIncludes(cell, "CALDA") || safeIncludes(cell, "APOIO")) ? "APOIO TRATOS - CALDA" : cell;
                                     }
                                 } else if (modo === 'plantio') {
                                     if (rows[r+1] && String(rows[r+1][c]).toUpperCase().trim() === "BLOCO" && cell !== "" && cell !== "O.S." && cell !== "O.S" && cell !== "OS") {
@@ -841,11 +844,19 @@
                                     for (let s = r + 1; s < r + 6; s++) {
                                         if (!rows[s]) continue;
                                         let rowStr = rows[s].map(x => String(x||"").toUpperCase().trim());
-                                        cEquip = rowStr.findIndex((x, idx) => idx >= Math.max(0, c - 2) && (safeIncludes(x, "EQUIP") || safeIncludes(x, "FROTA")));
                                         
+                                        // V149: O RADAR RAIO-X PARA ACHÁ-LO MESMO SE O CABEÇALHO TIVER ZUADO
+                                        cEquip = rowStr.findIndex((x, idx) => idx >= Math.max(0, c - 2) && (safeIncludes(x, "EQUIP") || safeIncludes(x, "FROTA") || safeIncludes(x, "TRATOR") || safeIncludes(x, "CODIGO") || safeIncludes(x, "CÓDIGO") || safeIncludes(x, "VEICULO") || safeIncludes(x, "EQP")));
+                                        if (cEquip === -1) {
+                                            let fallbackImpl = rowStr.findIndex((x, idx) => idx >= Math.max(0, c - 2) && (safeIncludes(x, "IMPLEMENT") || safeIncludes(x, "IMPL")));
+                                            if (fallbackImpl > 0) {
+                                                cEquip = fallbackImpl - 1; // Puxa uma coluna para trás se só achar o implemento
+                                            }
+                                        }
+
                                         if (cEquip !== -1) {
                                             startR = s + 1;
-                                            cImpl = rowStr.findIndex((x, idx) => idx >= cEquip && (safeIncludes(x, "IMPLEMENTO") || safeIncludes(x, "IMPL")));
+                                            cImpl = rowStr.findIndex((x, idx) => idx >= cEquip && (safeIncludes(x, "IMPLEMENT") || safeIncludes(x, "IMPL")));
                                             cStatus = rowStr.findIndex((x, idx) => idx >= cEquip && (safeIncludes(x, "STATUS") || safeIncludes(x, "MOTIVO") || safeIncludes(x, "ESTADO") || safeIncludes(x, "PROBLEMA")));
                                             cUCom = rowStr.findIndex((x, idx) => idx >= cEquip && (safeIncludes(x, "U. COMUNICA") || safeIncludes(x, "ULTIMA COM") || safeIncludes(x, "LTIMA COM") || safeIncludes(x, "ATUALIZA") || safeIncludes(x, "CONEX")));
                                             break;
@@ -1006,7 +1017,7 @@
                                             cMap[frota] = frota + " " + unit + " - " + nameRaw + " - " + (lastConnText || "Sem sinal");
                                         }
 
-                                        let isTransp = safeIncludes(nameRaw, "TRANSP"); 
+                                        let isTransp = safeIncludes(nameRaw, "TRANSP") || safeIncludes(nameRaw, "CALDA") || safeIncludes(nameRaw, "APOIO"); 
                                         let textoImplemento = (isTransp || impl === frota) ? "" : " - " + impl;
 
                                         let finalReason = stUpper;
@@ -1115,7 +1126,8 @@
 
                     let order = [];
                     if (modo === 'tratos') {
-                        order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "CORTE SOQUEIRA", "ELIMINADOR DE SOQUEIRA", "SOQUEIRA", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA"];
+                        // V149: Adicionado "APOIO TRATOS - CALDA" na ordem correta
+                        order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "CORTE SOQUEIRA", "ELIMINADOR DE SOQUEIRA", "SOQUEIRA", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA", "APOIO TRATOS - CALDA"];
                     } else {
                         order = ["FTE", "COL MUDA", "TR MUDA", "TRANSP MUDA", "PLANTADORA", "SUBSOLAGEM", "GRADAGEM", "CANTERIZA", "SULCADOR", "ELIMINADOR"];
                     }
@@ -1177,7 +1189,6 @@
                                 if (modo === 'tratos' && safeIncludes(f.name, "HERBICIDA")) {
                                     let frotaPura = a.replace('✅ ', '').replace('✅', '').replace('🟡 ', '').replace('🟡', '').split(' - ')[0].trim();
                                     let r = await askHerbicidaType(frotaPura);
-                                    // FIX 147: REMOVIDOS OS PARÊNTESES DO HERBICIDA
                                     if(r) it += " - " + r; 
                                 }
                                 txt += it + "\n";
