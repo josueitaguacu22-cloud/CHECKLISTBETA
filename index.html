@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos & Plantio - V149 (O Radar Raio-X) 🩻</title>
+    <title>Checklist Tratos & Plantio - V154 (Campo de Força) 🛡️</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -61,7 +61,6 @@
             cursor: pointer;
         }
         
-        /* ÍCONES DE CALENDÁRIO E RELÓGIO EM VERMELHO */
         input[type="date"]::-webkit-calendar-picker-indicator,
         input[type="time"]::-webkit-calendar-picker-indicator {
             filter: invert(36%) sepia(87%) saturate(5428%) hue-rotate(342deg) brightness(98%) contrast(105%);
@@ -697,7 +696,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V149... 🚀`;
+        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V154... 🚀`;
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -717,7 +716,6 @@
                     let frentesTurno = new Set();
                     let frentesChuva = new Set();
 
-                    // V149: LÊ "APOIO" e "CALDA" no TRATOS
                     const keywordsTratos = ["HERBICIDA", "CULTIVO", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "QUEBRA LOMBO", "TRANSP", "SOQUEIRA", "ELIMINADOR", "CALDA", "APOIO"];
                     const now = new Date();
 
@@ -840,17 +838,35 @@
                                     
                                     let startR = -1;
                                     let cEquip = -1, cImpl = -1, cStatus = -1, cUCom = -1;
+                                    let anchorFound = false;
 
                                     for (let s = r + 1; s < r + 6; s++) {
                                         if (!rows[s]) continue;
                                         let rowStr = rows[s].map(x => String(x||"").toUpperCase().trim());
                                         
-                                        // V149: O RADAR RAIO-X PARA ACHÁ-LO MESMO SE O CABEÇALHO TIVER ZUADO
-                                        cEquip = rowStr.findIndex((x, idx) => idx >= Math.max(0, c - 2) && (safeIncludes(x, "EQUIP") || safeIncludes(x, "FROTA") || safeIncludes(x, "TRATOR") || safeIncludes(x, "CODIGO") || safeIncludes(x, "CÓDIGO") || safeIncludes(x, "VEICULO") || safeIncludes(x, "EQP")));
+                                        let searchStart = Math.max(0, c - 2);
+                                        let searchEnd = c + 4;
+                                        
+                                        cEquip = rowStr.findIndex((x, idx) => idx >= searchStart && idx <= searchEnd && (safeIncludes(x, "EQUIP") || safeIncludes(x, "FROTA") || safeIncludes(x, "TRATOR") || safeIncludes(x, "CODIGO") || safeIncludes(x, "CÓDIGO") || safeIncludes(x, "VEICULO") || (safeIncludes(x, "EQP") && !safeIncludes(x, "STATUS"))));
+                                        
                                         if (cEquip === -1) {
-                                            let fallbackImpl = rowStr.findIndex((x, idx) => idx >= Math.max(0, c - 2) && (safeIncludes(x, "IMPLEMENT") || safeIncludes(x, "IMPL")));
+                                            let fallbackImpl = rowStr.findIndex((x, idx) => idx >= searchStart && idx <= searchEnd && (safeIncludes(x, "IMPLEMENT") || safeIncludes(x, "IMPL") || safeIncludes(x, "MPLEMENT")));
                                             if (fallbackImpl > 0) {
-                                                cEquip = fallbackImpl - 1; // Puxa uma coluna para trás se só achar o implemento
+                                                cEquip = fallbackImpl - 1; 
+                                            }
+                                        }
+
+                                        if (cEquip === -1) {
+                                            let fallbackStatus = rowStr.findIndex((x, idx) => idx >= searchStart && idx <= searchEnd && (safeIncludes(x, "STATUS") || safeIncludes(x, "MOTIVO")));
+                                            if (fallbackStatus > 1) {
+                                                cEquip = fallbackStatus - 2; 
+                                            }
+                                        }
+
+                                        if (cEquip === -1) {
+                                            let fallbackConn = rowStr.findIndex((x, idx) => idx >= searchStart && idx <= searchEnd && (safeIncludes(x, "CONEX") || safeIncludes(x, "ATUALIZA")));
+                                            if (fallbackConn > 2) {
+                                                cEquip = fallbackConn - 3; 
                                             }
                                         }
 
@@ -859,7 +875,26 @@
                                             cImpl = rowStr.findIndex((x, idx) => idx >= cEquip && (safeIncludes(x, "IMPLEMENT") || safeIncludes(x, "IMPL")));
                                             cStatus = rowStr.findIndex((x, idx) => idx >= cEquip && (safeIncludes(x, "STATUS") || safeIncludes(x, "MOTIVO") || safeIncludes(x, "ESTADO") || safeIncludes(x, "PROBLEMA")));
                                             cUCom = rowStr.findIndex((x, idx) => idx >= cEquip && (safeIncludes(x, "U. COMUNICA") || safeIncludes(x, "ULTIMA COM") || safeIncludes(x, "LTIMA COM") || safeIncludes(x, "ATUALIZA") || safeIncludes(x, "CONEX")));
+                                            anchorFound = true;
                                             break;
+                                        }
+                                    }
+
+                                    // V153/V154: A Âncora de Aço ⚓ (Focada apenas na coluna C)
+                                    if (!anchorFound || startR === -1 || cEquip === -1) {
+                                        for (let s = r + 1; s < r + 6; s++) {
+                                            if (rows[s]) {
+                                                let localSlice = rows[s].slice(Math.max(0, c - 1), c + 3);
+                                                let hasRef = localSlice.some(x => safeIncludes(x, "REFER"));
+                                                if (hasRef) {
+                                                    startR = s + 2; 
+                                                    cEquip = c;     
+                                                    cImpl = c + 1;  
+                                                    cStatus = c + 2; 
+                                                    cUCom = c + 3;  
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
                                     
@@ -936,18 +971,28 @@
                                     while (dr < rows.length && dr < startR + 30) {
                                         let rowData = rows[dr];
                                         
-                                        if (!rowData || String(rowData.join("")).trim() === "") { 
+                                        // V154: CAMPO DE FORÇA (Somente lê colunas desta frente!)
+                                        let localTextStr = "";
+                                        let scanStartCol = Math.max(0, cEquip - 2);
+                                        let scanEndCol = cEquip + 5;
+                                        if (rowData) {
+                                            for(let colIdx = scanStartCol; colIdx <= scanEndCol; colIdx++) {
+                                                if (rowData[colIdx]) localTextStr += String(rowData[colIdx]).toUpperCase() + " ";
+                                            }
+                                        }
+                                        
+                                        if (!rowData || localTextStr.trim() === "") { 
                                             blankCount++;
                                             if (blankCount >= 3) break;
                                             dr++; continue; 
                                         }
 
-                                        let rowTextRawStr = String(rowData.join(" ")).toUpperCase();
-                                        
-                                        if (safeIncludes(rowTextRawStr, "JONH DEERE") || safeIncludes(rowTextRawStr, "JOHN DEERE") || safeIncludes(rowTextRawStr, "MERCEDES") || safeIncludes(rowTextRawStr, "MERCEDEZ") || safeIncludes(rowTextRawStr, "VOLVO") || safeIncludes(rowTextRawStr, "SCANIA") || safeIncludes(rowTextRawStr, "VALTRA") || safeIncludes(rowTextRawStr, "CASE PUMA") || safeIncludes(rowTextRawStr, "CASE MAGNUM") || safeIncludes(rowTextRawStr, "NEW HOLLAND") || safeIncludes(rowTextRawStr, "VW ") || safeIncludes(rowTextRawStr, "VOLKSWAGEN")) {
+                                        if (safeIncludes(localTextStr, "JONH DEERE") || safeIncludes(localTextStr, "JOHN DEERE") || safeIncludes(localTextStr, "MERCEDES") || safeIncludes(localTextStr, "MERCEDEZ") || safeIncludes(localTextStr, "VOLVO") || safeIncludes(localTextStr, "SCANIA") || safeIncludes(localTextStr, "VALTRA") || safeIncludes(localTextStr, "CASE PUMA") || safeIncludes(localTextStr, "CASE MAGNUM") || safeIncludes(localTextStr, "NEW HOLLAND") || safeIncludes(localTextStr, "VW ") || safeIncludes(localTextStr, "VOLKSWAGEN")) {
                                             break;
                                         }
-                                        if (rowTextRawStr.includes("OBSERVA") || rowTextRawStr.includes("OBS:") || rowTextRawStr.includes("OBS.") || /(^|\s)OBS($|\s)/.test(rowTextRawStr)) {
+                                        
+                                        // Essa linha antes usava "rowTextRawStr" e matava tudo se o vizinho tivesse "OBS"! Agora usa "localTextStr"!
+                                        if (localTextStr.includes("OBSERVA") || localTextStr.includes("OBS:") || localTextStr.includes("OBS.") || /(^|\s)OBS($|\s)/.test(localTextStr)) {
                                             break;
                                         }
                                         
@@ -968,8 +1013,7 @@
                                             blankCount++;
                                             if (blankCount >= 3) break;
                                             
-                                            let rowText = rowData.join(" ").toUpperCase();
-                                            if (safeIncludes(rowText, "TOTAL") || safeIncludes(rowText, "RESUMO") || safeIncludes(rowText, "MECANICA") || safeIncludes(rowText, "OFICINA") || safeIncludes(rowText, "PARADA")) {
+                                            if (safeIncludes(localTextStr, "TOTAL") || safeIncludes(localTextStr, "RESUMO") || safeIncludes(localTextStr, "MECANICA") || safeIncludes(localTextStr, "OFICINA") || safeIncludes(localTextStr, "PARADA")) {
                                                 break;
                                             }
                                             dr++; continue; 
@@ -1126,7 +1170,6 @@
 
                     let order = [];
                     if (modo === 'tratos') {
-                        // V149: Adicionado "APOIO TRATOS - CALDA" na ordem correta
                         order = ["HERBICIDA", "CULTIVO / Q LOMBO", "CULTIVO MINERAL", "CORTE SOQUEIRA", "ELIMINADOR DE SOQUEIRA", "SOQUEIRA", "COMPOSTO", "CORRETIVO", "VINHAÇA", "VINHACA", "LOCALIZADA", "TRANSP DE VINHAÇA", "APOIO TRATOS - CALDA"];
                     } else {
                         order = ["FTE", "COL MUDA", "TR MUDA", "TRANSP MUDA", "PLANTADORA", "SUBSOLAGEM", "GRADAGEM", "CANTERIZA", "SULCADOR", "ELIMINADOR"];
