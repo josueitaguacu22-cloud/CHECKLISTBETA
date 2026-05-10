@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos & Plantio - V154 (Campo de Força) 🛡️</title>
+    <title>Checklist Tratos & Plantio - V157 (Muralha de Titânio) 🛡️</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -696,7 +696,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V154... 🚀`;
+        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V157... 🚀🛡️`;
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -803,7 +803,10 @@
                                 let nameRaw = cell;
 
                                 if (modo === 'tratos') {
-                                    if (keywordsTratos.some(k => safeIncludes(cell, k))) {
+                                    // V157 - ANTI-FALSO CABEÇALHO: Blinda contra a leitura de status (ex: "MUDANÇA HERBICIDA") como nova frente
+                                    let isStatusBlocker = cell.length > 35 || safeIncludes(cell, "MUDANÇA") || safeIncludes(cell, "MUDANCA") || safeIncludes(cell, "AGUARD") || safeIncludes(cell, "MANUT") || safeIncludes(cell, "OFICINA") || safeIncludes(cell, "QUEBRAD") || safeIncludes(cell, "PARADA");
+                                    
+                                    if (keywordsTratos.some(k => safeIncludes(cell, k)) && !isStatusBlocker) {
                                         isFrontMatch = true;
                                         
                                         let numFrente = "1"; 
@@ -880,7 +883,6 @@
                                         }
                                     }
 
-                                    // V153/V154: A Âncora de Aço ⚓ (Focada apenas na coluna C)
                                     if (!anchorFound || startR === -1 || cEquip === -1) {
                                         for (let s = r + 1; s < r + 6; s++) {
                                             if (rows[s]) {
@@ -971,7 +973,7 @@
                                     while (dr < rows.length && dr < startR + 30) {
                                         let rowData = rows[dr];
                                         
-                                        // V154: CAMPO DE FORÇA (Somente lê colunas desta frente!)
+                                        // V154: CAMPO DE FORÇA
                                         let localTextStr = "";
                                         let scanStartCol = Math.max(0, cEquip - 2);
                                         let scanEndCol = cEquip + 5;
@@ -991,7 +993,6 @@
                                             break;
                                         }
                                         
-                                        // Essa linha antes usava "rowTextRawStr" e matava tudo se o vizinho tivesse "OBS"! Agora usa "localTextStr"!
                                         if (localTextStr.includes("OBSERVA") || localTextStr.includes("OBS:") || localTextStr.includes("OBS.") || /(^|\s)OBS($|\s)/.test(localTextStr)) {
                                             break;
                                         }
@@ -1013,8 +1014,24 @@
                                             blankCount++;
                                             if (blankCount >= 3) break;
                                             
-                                            if (safeIncludes(localTextStr, "TOTAL") || safeIncludes(localTextStr, "RESUMO") || safeIncludes(localTextStr, "MECANICA") || safeIncludes(localTextStr, "OFICINA") || safeIncludes(localTextStr, "PARADA")) {
-                                                break;
+                                            // V157: A MURALHA DE TITÂNIO - Pega a linha INTEIRA para evitar ponto cego.
+                                            let fullRowStr = rowData.map(x => String(x||"").toUpperCase().trim()).join(" ");
+
+                                            if (safeIncludes(fullRowStr, "TOTAL") || 
+                                                safeIncludes(fullRowStr, "RESUMO") || 
+                                                (safeIncludes(fullRowStr, "MECANICA") && !safeIncludes(fullRowStr, "COLHEDORA")) || 
+                                                (safeIncludes(fullRowStr, "OFICINA") && !safeIncludes(fullRowStr, "CAMINH")) || 
+                                                (safeIncludes(fullRowStr, "PARADA") && !safeIncludes(fullRowStr, "MOTIVO")) || 
+                                                safeIncludes(fullRowStr, "EQUIPAMENTO") || 
+                                                safeIncludes(fullRowStr, "FROTA") || 
+                                                (safeIncludes(fullRowStr, "IMPLEMENTO") && !safeIncludes(fullRowStr, "SEM IMPLEMENTO")) || 
+                                                safeIncludes(fullRowStr, "REFERENCIA") || 
+                                                safeIncludes(fullRowStr, "REFERÊNCIA") ||
+                                                safeIncludes(fullRowStr, "BLOCO") ||
+                                                safeIncludes(fullRowStr, "O.S") ||
+                                                safeIncludes(fullRowStr, "OS:") ||
+                                                safeIncludes(fullRowStr, "FRENTE")) {
+                                                break; // Bateu no título de outra frente, encerra o loop sem dó!
                                             }
                                             dr++; continue; 
                                         }
