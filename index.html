@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos & Plantio - V157 (Muralha de Titânio) 🛡️</title>
+    <title>Checklist Tratos & Plantio - V158 (Muralha de Titânio + Aguard) 🛡️</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -348,6 +348,7 @@
                         <div style="display:flex;gap:10px;">
                             <input type="date" class="inp-data" style="flex:1;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
                             <input type="time" class="inp-hora" style="flex:1;padding:10px;border-radius:5px;background:#2a2a40;color:#fff;border:1px solid #4a4a6a;">
+                            <button type="button" class="btn-aguard" data-active="false" style="padding:10px 15px; border-radius:5px; background:#2a2a40; color:#fff; border:1px solid #4a4a6a; font-weight:bold; cursor:pointer;">AGUARD.</button>
                         </div>
                         <input type="hidden" class="inp-num" value="1°">
                     </div>
@@ -370,6 +371,9 @@
             items.forEach(item => {
                 const btns = item.querySelectorAll('.btn-prev-num');
                 const inpNum = item.querySelector('.inp-num');
+                const btnAguard = item.querySelector('.btn-aguard');
+                const inpData = item.querySelector('.inp-data');
+                const inpHora = item.querySelector('.inp-hora');
                 
                 btns.forEach(b => {
                     b.onclick = () => {
@@ -379,6 +383,25 @@
                         inpNum.value = b.getAttribute('data-val');
                     };
                 });
+                
+                btnAguard.onclick = () => {
+                    const isActive = btnAguard.getAttribute('data-active') === 'true';
+                    if (isActive) {
+                        btnAguard.setAttribute('data-active', 'false');
+                        btnAguard.style.background = '#2a2a40';
+                        btnAguard.style.borderColor = '#4a4a6a';
+                        inpData.disabled = false;
+                        inpHora.disabled = false;
+                    } else {
+                        btnAguard.setAttribute('data-active', 'true');
+                        btnAguard.style.background = '#ff9800'; 
+                        btnAguard.style.borderColor = '#ff9800';
+                        inpData.value = '';
+                        inpHora.value = '';
+                        inpData.disabled = true;
+                        inpHora.disabled = true;
+                    }
+                };
             });
 
             document.getElementById('btnSavePrev').onclick = () => {
@@ -388,8 +411,11 @@
                     const num = item.querySelector('.inp-num').value;
                     const d = item.querySelector('.inp-data').value;
                     const h = item.querySelector('.inp-hora').value;
+                    const isAguard = item.querySelector('.btn-aguard').getAttribute('data-active') === 'true';
                     
-                    if (d && h) {
+                    if (isAguard) {
+                        results[frota] = `AGUARD. ${num} PREV.`;
+                    } else if (d && h) {
                         const [yyyy, mm, dd] = d.split('-');
                         results[frota] = `${num} PREV. ${dd}/${mm} ${h}`;
                     }
@@ -696,7 +722,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V157... 🚀🛡️`;
+        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V158... 🚀🛡️`;
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -803,7 +829,6 @@
                                 let nameRaw = cell;
 
                                 if (modo === 'tratos') {
-                                    // V157 - ANTI-FALSO CABEÇALHO: Blinda contra a leitura de status (ex: "MUDANÇA HERBICIDA") como nova frente
                                     let isStatusBlocker = cell.length > 35 || safeIncludes(cell, "MUDANÇA") || safeIncludes(cell, "MUDANCA") || safeIncludes(cell, "AGUARD") || safeIncludes(cell, "MANUT") || safeIncludes(cell, "OFICINA") || safeIncludes(cell, "QUEBRAD") || safeIncludes(cell, "PARADA");
                                     
                                     if (keywordsTratos.some(k => safeIncludes(cell, k)) && !isStatusBlocker) {
@@ -973,7 +998,6 @@
                                     while (dr < rows.length && dr < startR + 30) {
                                         let rowData = rows[dr];
                                         
-                                        // V154: CAMPO DE FORÇA
                                         let localTextStr = "";
                                         let scanStartCol = Math.max(0, cEquip - 2);
                                         let scanEndCol = cEquip + 5;
@@ -1014,7 +1038,6 @@
                                             blankCount++;
                                             if (blankCount >= 3) break;
                                             
-                                            // V157: A MURALHA DE TITÂNIO - Pega a linha INTEIRA para evitar ponto cego.
                                             let fullRowStr = rowData.map(x => String(x||"").toUpperCase().trim()).join(" ");
 
                                             if (safeIncludes(fullRowStr, "TOTAL") || 
@@ -1031,7 +1054,7 @@
                                                 safeIncludes(fullRowStr, "O.S") ||
                                                 safeIncludes(fullRowStr, "OS:") ||
                                                 safeIncludes(fullRowStr, "FRENTE")) {
-                                                break; // Bateu no título de outra frente, encerra o loop sem dó!
+                                                break; 
                                             }
                                             dr++; continue; 
                                         }
