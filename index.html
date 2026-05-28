@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos & Plantio - V158 (Muralha de Titânio + Aguard) 🛡️</title>
+    <title>Checklist Tratos & Plantio - V159 (Muralha + Trava de Mira) 🎯</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -722,7 +722,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V158... 🚀🛡️`;
+        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V159... 🚀🎯`;
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -829,7 +829,20 @@
                                 let nameRaw = cell;
 
                                 if (modo === 'tratos') {
-                                    let isStatusBlocker = cell.length > 35 || safeIncludes(cell, "MUDANÇA") || safeIncludes(cell, "MUDANCA") || safeIncludes(cell, "AGUARD") || safeIncludes(cell, "MANUT") || safeIncludes(cell, "OFICINA") || safeIncludes(cell, "QUEBRAD") || safeIncludes(cell, "PARADA");
+                                    // V159: Filtro Anti-Líder/Operador reforçado
+                                    let isStatusBlocker = cell.length > 35 || 
+                                        safeIncludes(cell, "MUDANÇA") || 
+                                        safeIncludes(cell, "MUDANCA") || 
+                                        safeIncludes(cell, "AGUARD") || 
+                                        safeIncludes(cell, "MANUT") || 
+                                        safeIncludes(cell, "OFICINA") || 
+                                        safeIncludes(cell, "QUEBRAD") || 
+                                        safeIncludes(cell, "PARADA") || 
+                                        safeIncludes(cell, "LÍDER") || 
+                                        safeIncludes(cell, "LIDER") || 
+                                        safeIncludes(cell, "OPERADOR") || 
+                                        safeIncludes(cell, "PILOTO") || 
+                                        safeIncludes(cell, "BORRACHARIA");
                                     
                                     if (keywordsTratos.some(k => safeIncludes(cell, k)) && !isStatusBlocker) {
                                         isFrontMatch = true;
@@ -872,8 +885,9 @@
                                         if (!rows[s]) continue;
                                         let rowStr = rows[s].map(x => String(x||"").toUpperCase().trim());
                                         
-                                        let searchStart = Math.max(0, c - 2);
-                                        let searchEnd = c + 4;
+                                        // V159: Restrição extrema de busca horizontal. Evita sequestro de tabelas.
+                                        let searchStart = Math.max(0, c - 1);
+                                        let searchEnd = c + 1; 
                                         
                                         cEquip = rowStr.findIndex((x, idx) => idx >= searchStart && idx <= searchEnd && (safeIncludes(x, "EQUIP") || safeIncludes(x, "FROTA") || safeIncludes(x, "TRATOR") || safeIncludes(x, "CODIGO") || safeIncludes(x, "CÓDIGO") || safeIncludes(x, "VEICULO") || (safeIncludes(x, "EQP") && !safeIncludes(x, "STATUS"))));
                                         
@@ -911,7 +925,8 @@
                                     if (!anchorFound || startR === -1 || cEquip === -1) {
                                         for (let s = r + 1; s < r + 6; s++) {
                                             if (rows[s]) {
-                                                let localSlice = rows[s].slice(Math.max(0, c - 1), c + 3);
+                                                // V159: Slice restrito também no fallback
+                                                let localSlice = rows[s].slice(Math.max(0, c - 1), c + 2);
                                                 let hasRef = localSlice.some(x => safeIncludes(x, "REFER"));
                                                 if (hasRef) {
                                                     startR = s + 2; 
@@ -999,8 +1014,8 @@
                                         let rowData = rows[dr];
                                         
                                         let localTextStr = "";
-                                        let scanStartCol = Math.max(0, cEquip - 2);
-                                        let scanEndCol = cEquip + 5;
+                                        let scanStartCol = Math.max(0, cEquip - 1);
+                                        let scanEndCol = cEquip + 4;
                                         if (rowData) {
                                             for(let colIdx = scanStartCol; colIdx <= scanEndCol; colIdx++) {
                                                 if (rowData[colIdx]) localTextStr += String(rowData[colIdx]).toUpperCase() + " ";
@@ -1024,7 +1039,8 @@
                                         let frota = null;
                                         let baseC = cEquip;
                                         
-                                        for (let k = 0; k <= 2; k++) {
+                                        // V159: Buscar frota apenas BEM próximo ao cEquip
+                                        for (let k = 0; k <= 1; k++) {
                                             let cellText = String(rowData[cEquip+k] || "").trim();
                                             let mMatch = cellText.match(/\b(\d{4,6})\b/);
                                             if (mMatch) { 
