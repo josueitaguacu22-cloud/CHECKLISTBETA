@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Tratos & Plantio - V159 (Muralha + Trava de Mira) 🎯</title>
+    <title>Checklist Tratos & Plantio - V160 (Mente Sincronizada) 🧠</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -722,7 +722,7 @@
         
         const file = fileUpload.files[0];
         const reader = new FileReader();
-        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V159... 🚀🎯`;
+        document.getElementById('resultado').innerText = `Iniciando Varredura (${modo.toUpperCase()}) V160... 🚀🧠`;
 
         reader.onload = async (e) => {
             await extrairFotosConfig(file);
@@ -797,7 +797,7 @@
                     for (let sn of workbook.SheetNames) {
                         let snUpper = sn.toUpperCase();
                         
-                        if (safeIncludes(snUpper, "PARADA") || safeIncludes(snUpper, "MECANICA") || safeIncludes(snUpper, "MANUT") || safeIncludes(snUpper, "OFICINA") || safeIncludes(snUpper, "CONFIG") || safeIncludes(snUpper, "DADOS") || safeIncludes(snUpper, "TABELA")) continue;
+                        if (safeIncludes(snUpper, "PARADA") || safeIncludes(snUpper, "MECANICA") || safeIncludes(snUpper, "MANUT") || safeIncludes(snUpper, "OFICINA") || safeIncludes(snUpper, "CONFIG") || safeIncludes(snUpper, "DADOS") || safeIncludes(snUpper, "TABELA") || safeIncludes(snUpper, "RESUMO") || safeIncludes(snUpper, "GERAL") || safeIncludes(snUpper, "CONTROLE") || safeIncludes(snUpper, "FROTA") || safeIncludes(snUpper, "APONTAMENTO")) continue;
                         
                         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sn], {header: 1});
                         
@@ -829,7 +829,6 @@
                                 let nameRaw = cell;
 
                                 if (modo === 'tratos') {
-                                    // V159: Filtro Anti-Líder/Operador reforçado
                                     let isStatusBlocker = cell.length > 35 || 
                                         safeIncludes(cell, "MUDANÇA") || 
                                         safeIncludes(cell, "MUDANCA") || 
@@ -885,7 +884,6 @@
                                         if (!rows[s]) continue;
                                         let rowStr = rows[s].map(x => String(x||"").toUpperCase().trim());
                                         
-                                        // V159: Restrição extrema de busca horizontal. Evita sequestro de tabelas.
                                         let searchStart = Math.max(0, c - 1);
                                         let searchEnd = c + 1; 
                                         
@@ -925,7 +923,6 @@
                                     if (!anchorFound || startR === -1 || cEquip === -1) {
                                         for (let s = r + 1; s < r + 6; s++) {
                                             if (rows[s]) {
-                                                // V159: Slice restrito também no fallback
                                                 let localSlice = rows[s].slice(Math.max(0, c - 1), c + 2);
                                                 let hasRef = localSlice.some(x => safeIncludes(x, "REFER"));
                                                 if (hasRef) {
@@ -993,6 +990,7 @@
                                     let isFrontTurno = safeIncludes(statusFrente, "TURNO S. OPERA") || safeIncludes(statusFrente, "TURNO SEM OPERA") || safeIncludes(statusFrente, "TURNO S OPERA");
                                     let isFrontChuva = safeIncludes(statusFrente, "CHUVA") || safeIncludes(statusFrente, "UMIDO") || safeIncludes(statusFrente, "ÚMIDO");
                                     
+                                    // V160: Adicionado savedB e savedOS para Inteligência Sincronizada
                                     if (!fData[name]) {
                                         fData[name] = { 
                                             name: name, 
@@ -1001,10 +999,15 @@
                                             seenFrotas: new Set(),
                                             isTurno: isFrontTurno,
                                             isChuva: isFrontChuva,
-                                            skipPrint: false
+                                            skipPrint: false,
+                                            savedB: "N/A",
+                                            savedOS: "N/A"
                                         };
                                     }
                                     
+                                    if (b && b !== "N/A" && b !== "-" && b !== "0" && !safeIncludes(b, "N/A")) fData[name].savedB = b;
+                                    if (os && os !== "N/A" && os !== "-" && os !== "0" && !safeIncludes(os, "N/A")) fData[name].savedOS = os;
+
                                     let curBlk = { b: b, os: os, acts: [], stps: [] };
 
                                     let dr = startR;
@@ -1039,7 +1042,6 @@
                                         let frota = null;
                                         let baseC = cEquip;
                                         
-                                        // V159: Buscar frota apenas BEM próximo ao cEquip
                                         for (let k = 0; k <= 1; k++) {
                                             let cellText = String(rowData[cEquip+k] || "").trim();
                                             let mMatch = cellText.match(/\b(\d{4,6})\b/);
@@ -1136,16 +1138,25 @@
                                         let isMudancaStatus = safeIncludes(finalReason, "MUDANÇA") || safeIncludes(finalReason, "MUDANCA");
                                         let isActive = false;
 
+                                        // V160: Anti-Falso Status da Planilha de Resumo
+                                        let frc = finalReason ? finalReason.toUpperCase().trim() : "";
+                                        let isFakeStop = false;
+                                        if (frc === nameRaw.toUpperCase() || safeIncludes(frc, "TRANSPORTE VINHACA") || safeIncludes(frc, "TRANSP DE VINHA") || safeIncludes(frc, "TRANSPORTE COMPOSTO") || safeIncludes(frc, "CULTIVO MINERAL") || safeIncludes(frc, "CORTE SOQUEIRA") || safeIncludes(frc, "COMPOSTO")) {
+                                            if (!safeIncludes(frc, "QUEBRA") && !safeIncludes(frc, "MANUT") && !safeIncludes(frc, "AGUARD") && !safeIncludes(frc, "PARADA") && !safeIncludes(frc, "FALTA")) {
+                                                isFakeStop = true;
+                                            }
+                                        }
+
                                         let isExplicitlyActive = safeIncludes(stUpper, "ATIVO") || safeIncludes(stUpper, "TRABALHANDO") || stUpper === "OK" || safeIncludes(stUpper, "PROPRIO");
 
-                                        if (stUpper === "" || isExplicitlyActive) {
+                                        if (stUpper === "" || isExplicitlyActive || isFakeStop) {
                                             isActive = true;
                                         }
                                         if (stUpper !== "" && (safeIncludes(stUpper, "OFF") || safeIncludes(stUpper, "DESATUALIZADO") || safeIncludes(stUpper, ">4H") || safeIncludes(stUpper, "+4H"))) {
                                             isActive = false;
                                         }
                                         
-                                        if (pMap[frota] && !isMudancaStatus && !isExplicitlyActive) {
+                                        if (pMap[frota] && !isMudancaStatus && !isExplicitlyActive && !isFakeStop) {
                                             isActive = false; 
                                         }
 
@@ -1260,17 +1271,31 @@
                         f.blocks.sort((a,b) => b.acts.length - a.acts.length);
                         
                         for (let bl of f.blocks) {
+                            // V160: Injeção da Memória Sincronizada (O.S. e BLOCO compartilhados)
                             let bVal = bl.b ? bl.b.toString().toUpperCase().trim() : "";
                             let isBlocoVazio = !bVal || bVal === "N/A" || bVal === "-" || bVal === "0" || bVal === "N" || bVal === "NA" || bVal === "O.S." || bVal === "OS" || safeIncludes(["SJO", "AND", "CRZ", "TAN", "MAN", "VER"], bVal);
+                            
+                            if (isBlocoVazio && f.savedB !== "N/A") {
+                                bl.b = f.savedB;
+                                bVal = bl.b.toString().toUpperCase().trim();
+                                isBlocoVazio = false;
+                            }
+
                             let osVal = bl.os ? bl.os.toString().toUpperCase().trim() : "";
                             let isOsVazia = !osVal || osVal === "N/A" || safeIncludes(osVal, "N/A") || safeIncludes(osVal, "NA") || safeIncludes(osVal, "N / A") || osVal === "-" || osVal === "0" || osVal === "N";
-                            let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal) && !isBlocoVazio; 
+                            
+                            if (isOsVazia && f.savedOS !== "N/A") {
+                                bl.os = f.savedOS;
+                                osVal = bl.os.toString().toUpperCase().trim();
+                                isOsVazia = false;
+                            }
 
                             if (isBlocoVazio && isOsVazia) {
                                 txt += "*OS:* N/A\n";
                             } else if (isBlocoVazio && !isOsVazia) {
                                 txt += "*OS:* " + bl.os + "\n";
                             } else {
+                                let isApenasLetras = bVal.length > 0 && !/\d/.test(bVal) && !isBlocoVazio; 
                                 let prefixo = isApenasLetras ? "*LOCAL:*" : "*BLOCO:*";
                                 if (isOsVazia) {
                                     if (isApenasLetras) {
